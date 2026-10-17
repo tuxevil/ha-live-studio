@@ -54,3 +54,21 @@ class StudioClient:
                 return result
         except (aiohttp.ClientError, asyncio.TimeoutError, ValueError):
             raise StudioError("Engine unavailable or invalid response") from None
+
+    async def image(self, identity):
+        try:
+            async with self.session.get(
+                self.url + "/api/cameras/" + identity + "/snapshot.jpg",
+                headers={"Authorization": "Bearer " + self.token},
+                timeout=aiohttp.ClientTimeout(total=15),
+            ) as response:
+                if response.status == 401:
+                    raise StudioAuthError("Authentication failed")
+                if response.status != 200:
+                    raise StudioError("No fresh image")
+                data = await response.read()
+                if not data.startswith(b"\xff\xd8"):
+                    raise StudioError("Invalid image")
+                return data
+        except (aiohttp.ClientError, asyncio.TimeoutError):
+            raise StudioError("Camera unavailable") from None

@@ -29,29 +29,91 @@
   "options": {
     "step": {
       "init": {
-        "title": "Emisión y elementos en pantalla",
+        "title": "Live Studio",
+        "menu_options": {
+          "cameras": "Cámaras",
+          "video": "Vídeo y música",
+          "overlays": "Información en pantalla",
+          "automation": "Selección automática"
+        }
+      },
+      "cameras": {
+        "title": "Cámaras",
+        "menu_options": {
+          "camera_add": "Añadir cámara",
+          "camera_edit": "Editar cámara",
+          "camera_remove": "Quitar cámara"
+        }
+      },
+      "camera_edit": {
+        "title": "Editar cámara",
+        "data": {
+          "camera_id": "Cámara"
+        }
+      },
+      "camera_remove": {
+        "title": "Quitar cámara",
+        "data": {
+          "camera_id": "Cámara"
+        }
+      },
+      "camera_details": {
+        "title": "Cámaras",
+        "description": "Cada vista tiene su URL RTSP. Detén la salida antes de cambiar las cámaras. La entidad física opcional identifica el origen para otras automatizaciones del paisaje.",
+        "data": {
+          "name": "Nombre de la cámara",
+          "rtsp_url": "URL RTSP de la cámara",
+          "camera_entity": "Cámara física de Home Assistant (opcional)",
+          "description": "Descripción del encuadre para comparar"
+        }
+      },
+      "video": {
+        "title": "Vídeo y música",
         "description": "Detén la salida antes de cambiar cámara, música o codificación. Los textos pueden cambiar mientras se emite. Deja un texto vacío para ocultarlo.",
         "data": {
-          "rtsp_url": "URL RTSP de la cámara",
           "music_directory": "Carpeta de MP3",
-          "title": "Título en pantalla",
-          "show_clock": "Mostrar reloj local",
-          "timezone": "Zona horaria IANA",
-          "ticker": "Marquesina",
-          "cta": "Aviso periódico",
           "width": "Ancho",
           "height": "Alto",
           "fps": "Fotogramas por segundo",
           "threads": "Hilos de codificación",
-          "bitrate_kbps": "Tasa de vídeo (Kbps)",
+          "bitrate_kbps": "Tasa de vídeo (Kbps)"
+        }
+      },
+      "overlays": {
+        "title": "Información en pantalla",
+        "description": "Detén la salida antes de cambiar cámara, música o codificación. Los textos pueden cambiar mientras se emite. Deja un texto vacío para ocultarlo.",
+        "data": {
+          "title": "Título en pantalla",
+          "timezone": "Zona horaria IANA",
+          "ticker": "Marquesina",
+          "cta": "Aviso periódico",
+          "no_signal_text": "Mensaje si falta la señal",
+          "show_clock": "Mostrar reloj local",
+          "show_camera_name": "Mostrar nombre de la cámara",
           "cta_period": "Segundos entre avisos",
           "cta_duration": "Duración del aviso (segundos)",
           "sensor_entity": "Sensor de Home Assistant (opcional)"
         }
+      },
+      "automation": {
+        "title": "Selección automática",
+        "description": "La IA es opcional y usa un proveedor existente de LLM Vision. Se compara durante la salida; el botón permite comparar en reposo sin cambiar automáticamente de cámara. La preferencia diurna solo se aplica con un estado solar reciente.",
+        "data": {
+          "ai_enabled": "Activar comparación de cámaras con IA",
+          "ai_provider": "Proveedor de LLM Vision",
+          "ai_model": "Modelo con visión",
+          "preferred_camera": "Cámara preferida de día",
+          "minimum_margin": "Ventaja mínima (puntos)",
+          "day_bonus": "Preferencia diurna adicional (puntos)",
+          "confirmations": "Confirmaciones consecutivas",
+          "minimum_dwell_minutes": "Tiempo mínimo entre cambios (minutos)",
+          "comparison_interval_minutes": "Intervalo de comparación (minutos)"
+        }
       }
     },
     "error": {
-      "cannot_apply": "No se pudieron aplicar los ajustes. Revisa los valores y detén la salida antes de cambiar el vídeo."
+      "cannot_apply": "No se pudieron aplicar los ajustes. Revisa los valores y detén la salida antes de cambiar el vídeo.",
+      "missing_ai_provider": "Configura un proveedor y modelo con visión e instala LLM Vision antes de activar la IA."
     }
   },
   "entity": {
@@ -66,6 +128,9 @@
       },
       "stop": {
         "name": "Detener salida"
+      },
+      "compare": {
+        "name": "Comparar vistas ahora"
       }
     },
     "text": {
@@ -90,6 +155,59 @@
           "preview_completed": "Vista previa terminada",
           "error": "Error"
         }
+      },
+      "current_camera": {
+        "name": "Cámara actual"
+      },
+      "view_decision": {
+        "name": "Comparación de vistas",
+        "state": {
+          "waiting": "Esperando comparación",
+          "manual": "Control manual",
+          "idle": "En reposo",
+          "no_video": "Sin vídeo actual",
+          "no_detail": "Sin detalle suficiente",
+          "candidate": "Vista candidata",
+          "selected": "Vista seleccionada",
+          "failover": "Cámara de recuperación seleccionada",
+          "keep": "Se mantiene la vista",
+          "comparing": "Comparando vistas"
+        }
+      }
+    },
+    "select": {
+      "camera_selection": {
+        "name": "Selección de cámara",
+        "state": {
+          "automatic": "Automático"
+        }
+      }
+    },
+    "number": {
+      "minimum_margin": {
+        "name": "Ventaja mínima"
+      },
+      "day_bonus": {
+        "name": "Preferencia diurna adicional"
+      },
+      "minimum_dwell": {
+        "name": "Tiempo mínimo entre cambios"
+      },
+      "comparison_interval": {
+        "name": "Intervalo de comparación"
+      },
+      "confirmations": {
+        "name": "Confirmaciones consecutivas"
+      }
+    },
+    "camera": {
+      "current_view": {
+        "name": "Vista de la cámara seleccionada"
+      }
+    },
+    "binary_sensor": {
+      "current_video": {
+        "name": "Vídeo actual de la cámara"
       }
     }
   }

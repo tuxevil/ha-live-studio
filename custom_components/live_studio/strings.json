@@ -29,29 +29,91 @@
   "options": {
     "step": {
       "init": {
-        "title": "Stream and overlay settings",
+        "title": "Live Studio",
+        "menu_options": {
+          "cameras": "Cameras",
+          "video": "Video and music",
+          "overlays": "On-screen information",
+          "automation": "Automatic selection"
+        }
+      },
+      "cameras": {
+        "title": "Cameras",
+        "menu_options": {
+          "camera_add": "Add camera",
+          "camera_edit": "Edit camera",
+          "camera_remove": "Remove camera"
+        }
+      },
+      "camera_edit": {
+        "title": "Edit camera",
+        "data": {
+          "camera_id": "Camera"
+        }
+      },
+      "camera_remove": {
+        "title": "Remove camera",
+        "data": {
+          "camera_id": "Camera"
+        }
+      },
+      "camera_details": {
+        "title": "Cameras",
+        "description": "Each view has its own RTSP URL. Stop the output before changing cameras. The optional physical entity identifies the source for other landscape automations.",
+        "data": {
+          "name": "Camera name",
+          "rtsp_url": "RTSP camera URL",
+          "camera_entity": "Physical Home Assistant camera (optional)",
+          "description": "Framing description for comparison"
+        }
+      },
+      "video": {
+        "title": "Video and music",
         "description": "Stop the output before changing source, music or encoder settings. Overlay text can change while streaming. Leaving a text empty hides it.",
         "data": {
-          "rtsp_url": "RTSP camera URL",
           "music_directory": "MP3 folder",
-          "title": "On-screen title",
-          "show_clock": "Show local clock",
-          "timezone": "IANA timezone",
-          "ticker": "Scrolling ticker",
-          "cta": "Periodic message",
           "width": "Width",
           "height": "Height",
           "fps": "Frames per second",
           "threads": "Encoder threads",
-          "bitrate_kbps": "Video bitrate (Kbps)",
+          "bitrate_kbps": "Video bitrate (Kbps)"
+        }
+      },
+      "overlays": {
+        "title": "On-screen information",
+        "description": "Stop the output before changing source, music or encoder settings. Overlay text can change while streaming. Leaving a text empty hides it.",
+        "data": {
+          "title": "On-screen title",
+          "timezone": "IANA timezone",
+          "ticker": "Scrolling ticker",
+          "cta": "Periodic message",
+          "no_signal_text": "Camera outage message",
+          "show_clock": "Show local clock",
+          "show_camera_name": "Show camera name",
           "cta_period": "Seconds between messages",
           "cta_duration": "Message duration (seconds)",
           "sensor_entity": "Home Assistant sensor (optional)"
         }
+      },
+      "automation": {
+        "title": "Automatic selection",
+        "description": "AI is optional and uses an existing LLM Vision provider. Comparisons run only during output; the button can compare while idle without automatically changing the selected camera. Daylight preference is applied only with a fresh sun state.",
+        "data": {
+          "ai_enabled": "Enable optional AI camera comparison",
+          "ai_provider": "LLM Vision provider",
+          "ai_model": "Vision model",
+          "preferred_camera": "Preferred daytime camera",
+          "minimum_margin": "Minimum advantage (points)",
+          "day_bonus": "Daytime preference bonus (points)",
+          "confirmations": "Consecutive confirmations",
+          "minimum_dwell_minutes": "Minimum time between view changes (minutes)",
+          "comparison_interval_minutes": "Comparison interval (minutes)"
+        }
       }
     },
     "error": {
-      "cannot_apply": "Cannot apply settings. Check values and stop the output before changing video settings."
+      "cannot_apply": "Cannot apply settings. Check values and stop the output before changing video settings.",
+      "missing_ai_provider": "Configure a vision model/provider and install LLM Vision before enabling AI."
     }
   },
   "entity": {
@@ -66,6 +128,9 @@
       },
       "stop": {
         "name": "Stop output"
+      },
+      "compare": {
+        "name": "Compare camera views now"
       }
     },
     "text": {
@@ -90,6 +155,59 @@
           "preview_completed": "Preview completed",
           "error": "Error"
         }
+      },
+      "current_camera": {
+        "name": "Current camera"
+      },
+      "view_decision": {
+        "name": "View comparison",
+        "state": {
+          "waiting": "Waiting for comparison",
+          "manual": "Manual control",
+          "idle": "Idle",
+          "no_video": "No current video",
+          "no_detail": "No useful detail",
+          "candidate": "Candidate view",
+          "selected": "View selected",
+          "failover": "Recovery camera selected",
+          "keep": "Keeping current view",
+          "comparing": "Comparing views"
+        }
+      }
+    },
+    "select": {
+      "camera_selection": {
+        "name": "Camera selection",
+        "state": {
+          "automatic": "Automatic"
+        }
+      }
+    },
+    "number": {
+      "minimum_margin": {
+        "name": "Minimum advantage"
+      },
+      "day_bonus": {
+        "name": "Daytime preference bonus"
+      },
+      "minimum_dwell": {
+        "name": "Minimum time between changes"
+      },
+      "comparison_interval": {
+        "name": "Comparison interval"
+      },
+      "confirmations": {
+        "name": "Consecutive confirmations"
+      }
+    },
+    "camera": {
+      "current_view": {
+        "name": "Selected camera view"
+      }
+    },
+    "binary_sensor": {
+      "current_video": {
+        "name": "Current camera video"
       }
     }
   }
