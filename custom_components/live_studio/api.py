@@ -1,6 +1,7 @@
 """Small injectable client for the local Live Studio API."""
 
 import asyncio
+import re
 from urllib.parse import urlsplit
 
 import aiohttp
@@ -30,16 +31,23 @@ def endpoint(value):
 
 
 class StudioClient:
-    def __init__(self, session, url, token):
+    def __init__(self, session, url, token, live_id=None):
         self.session = session
         self.url = endpoint(url)
         self.token = token
+        if live_id is not None and not re.fullmatch(r"[a-z][a-z0-9_-]{0,63}", live_id):
+            raise ValueError("Invalid live identifier")
+        self.live_id = live_id
 
-    async def request(self, path, data=None):
+    def route(self, path, server=False):
+        prefix = "/api" if server or not self.live_id else "/api/lives/" + self.live_id
+        return self.url + prefix + "/" + path
+
+    async def request(self, path, data=None, *, server=False, method=None):
         try:
             async with self.session.request(
-                "GET" if data is None else "POST",
-                self.url + "/api/" + path,
+                method or ("GET" if data is None else "POST"),
+                self.route(path, server=server),
                 json=data,
                 headers={"Authorization": "Bearer " + self.token},
                 timeout=aiohttp.ClientTimeout(total=15),
@@ -58,7 +66,7 @@ class StudioClient:
     async def image(self, identity):
         try:
             async with self.session.get(
-                self.url + "/api/cameras/" + identity + "/snapshot.jpg",
+                self.route("cameras/" + identity + "/snapshot.jpg"),
                 headers={"Authorization": "Bearer " + self.token},
                 timeout=aiohttp.ClientTimeout(total=15),
             ) as response:

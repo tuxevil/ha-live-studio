@@ -13,7 +13,7 @@ class StudioEntity(CoordinatorEntity):
         self._attr_unique_id = f"{identity}_{key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, identity)},
-            name="Live Studio",
+            name=coordinator.entry.title,
             manufacturer="Tuxevil",
             model="Streaming engine",
             sw_version=coordinator.data["status"]["version"],

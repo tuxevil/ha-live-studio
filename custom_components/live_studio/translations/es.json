@@ -3,11 +3,11 @@
   "config": {
     "step": {
       "user": {
-        "title": "Conecta el motor de streaming",
-        "description": "Instala primero Live Studio Engine. Usa su dirección HTTP interna y el token API configurado en el complemento.",
-        "data": {
-          "endpoint": "URL del motor",
-          "api_token": "Token API"
+        "title": "Live Studio",
+        "menu_options": {
+          "create_live": "Crear un live",
+          "connect_live": "Administrar un live existente",
+          "engine": "Conectar otro motor"
         }
       },
       "reauth_confirm": {
@@ -15,15 +15,67 @@
         "data": {
           "api_token": "Token API"
         }
+      },
+      "engine": {
+        "title": "Conectar un motor",
+        "description": "Conecta Live Studio Engine 0.3.0 o posterior. Un motor puede alojar varios lives independientes.",
+        "data": {
+          "endpoint": "URL del motor",
+          "api_token": "Token API"
+        }
+      },
+      "server": {
+        "title": "Elegir motor",
+        "data": {
+          "server": "Motor"
+        }
+      },
+      "existing": {
+        "title": "Elegir live",
+        "data": {
+          "live_id": "Live"
+        }
+      },
+      "create": {
+        "title": "Crear un live independiente",
+        "description": "Elige una o varias fuentes de cámara y, opcionalmente, sensores de información. Se crea detenido, sin destino ni clave; no inicia ninguna emisión.",
+        "data": {
+          "name": "Nombre del live",
+          "camera_ids": "Fuentes de cámara",
+          "sensor_entities": "Sensores de información (opcionales)"
+        }
+      },
+      "first_camera": {
+        "title": "Añadir la primera fuente",
+        "description": "Introduce un stream RTSP. Después podrás seleccionar más fuentes en las opciones de este live.",
+        "data": {
+          "name": "Nombre de la cámara",
+          "rtsp_url": "URL RTSP",
+          "camera_entity": "Cámara de Home Assistant (opcional)"
+        }
+      },
+      "reconfigure": {
+        "title": "Reconectar este live",
+        "description": "La identidad del live debe coincidir. Útil al migrarlo a otro motor; no permite conectarlo por error a otro live.",
+        "data": {
+          "endpoint": "URL del motor",
+          "api_token": "Token API",
+          "live_id": "Identificador del live"
+        }
       }
     },
     "error": {
       "invalid_auth": "El motor rechazó el token API.",
-      "cannot_connect": "No se puede conectar al motor. Revisa la dirección y su disponibilidad."
+      "cannot_connect": "No se puede conectar al motor. Revisa la dirección y su disponibilidad.",
+      "cannot_create": "No se pudo crear el live. Revisa el nombre, las fuentes seleccionadas y la conexión.",
+      "invalid_camera": "La fuente debe ser una URL RTSP válida.",
+      "wrong_live": "La conexión corresponde a otro live; se conserva la configuración anterior."
     },
     "abort": {
       "already_configured": "Este motor ya está configurado.",
-      "reauth_successful": "Token API actualizado."
+      "reauth_successful": "Token API actualizado.",
+      "engine_unavailable": "El motor no está disponible.",
+      "reconfigure_successful": "Conexión del live actualizada."
     }
   },
   "options": {
@@ -34,7 +86,10 @@
           "cameras": "Cámaras",
           "video": "Vídeo y música",
           "overlays": "Información en pantalla",
-          "automation": "Selección automática"
+          "automation": "Selección automática",
+          "information": "Live y sensores",
+          "destination": "Destino de emisión",
+          "delete_live": "Eliminar este live"
         }
       },
       "cameras": {
@@ -42,7 +97,8 @@
         "menu_options": {
           "camera_add": "Añadir cámara",
           "camera_edit": "Editar cámara",
-          "camera_remove": "Quitar cámara"
+          "camera_remove": "Quitar cámara",
+          "camera_pick": "Seleccionar fuentes existentes"
         }
       },
       "camera_edit": {
@@ -91,8 +147,7 @@
           "show_clock": "Mostrar reloj local",
           "show_camera_name": "Mostrar nombre de la cámara",
           "cta_period": "Segundos entre avisos",
-          "cta_duration": "Duración del aviso (segundos)",
-          "sensor_entity": "Sensor de Home Assistant (opcional)"
+          "cta_duration": "Duración del aviso (segundos)"
         }
       },
       "automation": {
@@ -109,11 +164,46 @@
           "minimum_dwell_minutes": "Tiempo mínimo entre cambios (minutos)",
           "comparison_interval_minutes": "Intervalo de comparación (minutos)"
         }
+      },
+      "camera_pick": {
+        "title": "Fuentes de este live",
+        "description": "Selecciona entre una y ocho fuentes. Detén solo este live antes de cambiar su lista; los demás siguen funcionando.",
+        "data": {
+          "camera_ids": "Fuentes de cámara"
+        }
+      },
+      "information": {
+        "title": "Live y sensores",
+        "description": "Nombre y sensores propios de este live. Puedes dejar la lista vacía o elegir hasta ocho sensores. Los datos no disponibles se ocultan. Cambiar la selección no reinicia la salida.",
+        "data": {
+          "name": "Nombre del live",
+          "sensor_entities": "Sensores de información"
+        }
+      },
+      "destination": {
+        "title": "Destino privado de este live",
+        "description": "Detén este live antes de cambiar el destino. Introduce la URL RTMP/RTMPS completa con su clave. Dejar el campo vacío conserva el destino; marca retirar para borrarlo. La clave nunca se devuelve ni se guarda en las opciones de HA. Cada live necesita un ingest distinto.",
+        "data": {
+          "destination_url": "URL RTMP/RTMPS con clave",
+          "clear_destination": "Retirar el destino de este live"
+        }
+      },
+      "delete_live": {
+        "title": "Eliminar este live",
+        "description": "Debe estar detenido. Elimina su configuración activa y su entrada de HA; no afecta a otros lives ni finaliza eventos de YouTube.",
+        "data": {
+          "confirm_delete": "Confirmo que quiero eliminar este live"
+        }
       }
     },
     "error": {
       "cannot_apply": "No se pudieron aplicar los ajustes. Revisa los valores y detén la salida antes de cambiar el vídeo.",
-      "missing_ai_provider": "Configura un proveedor y modelo con visión e instala LLM Vision antes de activar la IA."
+      "missing_ai_provider": "Configura un proveedor y modelo con visión e instala LLM Vision antes de activar la IA.",
+      "stop_live_first": "No se pudo aplicar. Detén este live y comprueba que el destino no pertenezca a otro live.",
+      "confirm_delete": "Debes confirmar la eliminación."
+    },
+    "abort": {
+      "live_deleted": "Live eliminado."
     }
   },
   "entity": {

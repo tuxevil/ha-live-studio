@@ -3,11 +3,11 @@
   "config": {
     "step": {
       "user": {
-        "title": "Connect your streaming engine",
-        "description": "Install Live Studio Engine first. Use its internal HTTP address and the API token configured in the companion.",
-        "data": {
-          "endpoint": "Engine URL",
-          "api_token": "API token"
+        "title": "Live Studio",
+        "menu_options": {
+          "create_live": "Create a live",
+          "connect_live": "Manage an existing live",
+          "engine": "Connect another engine"
         }
       },
       "reauth_confirm": {
@@ -15,15 +15,67 @@
         "data": {
           "api_token": "API token"
         }
+      },
+      "engine": {
+        "title": "Connect an engine",
+        "description": "Connect Live Studio Engine 0.3.0 or later. One engine can host multiple independent lives.",
+        "data": {
+          "endpoint": "Engine URL",
+          "api_token": "API token"
+        }
+      },
+      "server": {
+        "title": "Choose an engine",
+        "data": {
+          "server": "Engine"
+        }
+      },
+      "existing": {
+        "title": "Choose a live",
+        "data": {
+          "live_id": "Live"
+        }
+      },
+      "create": {
+        "title": "Create an independent live",
+        "description": "Choose one or more camera streams and optional information sensors. Created stopped without an ingest destination; no broadcast starts.",
+        "data": {
+          "name": "Live name",
+          "camera_ids": "Camera streams",
+          "sensor_entities": "Information sensors (optional)"
+        }
+      },
+      "first_camera": {
+        "title": "Add the first source",
+        "description": "Enter an RTSP stream. More sources can be selected in this live’s options.",
+        "data": {
+          "name": "Camera name",
+          "rtsp_url": "URL RTSP",
+          "camera_entity": "Home Assistant camera (optional)"
+        }
+      },
+      "reconfigure": {
+        "title": "Reconnect this live",
+        "description": "The live identity must match. Use this when moving it to another engine.",
+        "data": {
+          "endpoint": "Engine URL",
+          "api_token": "Token API",
+          "live_id": "Live identifier"
+        }
       }
     },
     "error": {
       "invalid_auth": "The engine rejected the API token.",
-      "cannot_connect": "Cannot connect to the engine. Check its address and availability."
+      "cannot_connect": "Cannot connect to the engine. Check its address and availability.",
+      "cannot_create": "Could not create this live. Check its name, sources and engine connection.",
+      "invalid_camera": "Enter a valid RTSP source URL.",
+      "wrong_live": "This connection belongs to another live; the previous configuration is preserved."
     },
     "abort": {
       "already_configured": "This engine is already configured.",
-      "reauth_successful": "API token updated."
+      "reauth_successful": "API token updated.",
+      "engine_unavailable": "The engine is unavailable.",
+      "reconfigure_successful": "Live connection updated."
     }
   },
   "options": {
@@ -34,7 +86,10 @@
           "cameras": "Cameras",
           "video": "Video and music",
           "overlays": "On-screen information",
-          "automation": "Automatic selection"
+          "automation": "Automatic selection",
+          "information": "Live and sensors",
+          "destination": "Ingest destination",
+          "delete_live": "Delete this live"
         }
       },
       "cameras": {
@@ -42,7 +97,8 @@
         "menu_options": {
           "camera_add": "Add camera",
           "camera_edit": "Edit camera",
-          "camera_remove": "Remove camera"
+          "camera_remove": "Remove camera",
+          "camera_pick": "Select existing sources"
         }
       },
       "camera_edit": {
@@ -91,8 +147,7 @@
           "show_clock": "Show local clock",
           "show_camera_name": "Show camera name",
           "cta_period": "Seconds between messages",
-          "cta_duration": "Message duration (seconds)",
-          "sensor_entity": "Home Assistant sensor (optional)"
+          "cta_duration": "Message duration (seconds)"
         }
       },
       "automation": {
@@ -109,11 +164,46 @@
           "minimum_dwell_minutes": "Minimum time between view changes (minutes)",
           "comparison_interval_minutes": "Comparison interval (minutes)"
         }
+      },
+      "camera_pick": {
+        "title": "Sources for this live",
+        "description": "Select one to eight sources. Stop this live before changing its source list; other lives keep running.",
+        "data": {
+          "camera_ids": "Camera streams"
+        }
+      },
+      "information": {
+        "title": "Live and sensors",
+        "description": "This live’s own name and sensors. Leave empty or select up to eight sensors. Unavailable readings are omitted. Changes do not restart the output.",
+        "data": {
+          "name": "Live name",
+          "sensor_entities": "Information sensors"
+        }
+      },
+      "destination": {
+        "title": "Private destination for this live",
+        "description": "Stop this live before changing its destination. Enter the full RTMP/RTMPS URL and stream key. Blank preserves it; clear explicitly removes it. The key is never returned or saved in HA options. Each live needs a distinct ingest.",
+        "data": {
+          "destination_url": "RTMP/RTMPS URL including key",
+          "clear_destination": "Clear this live’s destination"
+        }
+      },
+      "delete_live": {
+        "title": "Delete this live",
+        "description": "Must be stopped. Removes this live’s active configuration and HA entry, without affecting other lives or closing YouTube events.",
+        "data": {
+          "confirm_delete": "Confirm deletion of this live"
+        }
       }
     },
     "error": {
       "cannot_apply": "Cannot apply settings. Check values and stop the output before changing video settings.",
-      "missing_ai_provider": "Configure a vision model/provider and install LLM Vision before enabling AI."
+      "missing_ai_provider": "Configure a vision model/provider and install LLM Vision before enabling AI.",
+      "stop_live_first": "Could not apply. Stop this live and check the destination is not assigned elsewhere.",
+      "confirm_delete": "Confirm deletion first."
+    },
+    "abort": {
+      "live_deleted": "Live deleted."
     }
   },
   "entity": {

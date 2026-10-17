@@ -1,6 +1,7 @@
 """Isolated Home Assistant lifecycle/controls test against a fake local engine."""
 
 import asyncio
+import copy
 import json
 import pathlib
 import shutil
@@ -68,7 +69,10 @@ async def main():
     )
     status = dict(
         id="test-engine-unique-id",
-        version="0.2.0",
+        version="0.3.0",
+        live_id="default",
+        live_name="First",
+        server_id="fixture-server",
         state="stopped",
         mode="preview",
         sources_revision="source-revision",
@@ -91,6 +95,15 @@ async def main():
     )
     received = {}
     posts = []
+    profiles = {
+        "default": {
+            "config": config,
+            "status": status,
+            "received": received,
+            "posts": posts,
+            "destination": "",
+        }
+    }
 
     @web.middleware
     async def auth(request, handler):
@@ -100,30 +113,115 @@ async def main():
 
     async def api(request):
         path = request.match_info["path"]
+        if path == "server":
+            return web.json_response(
+                {
+                    "id": "fixture-server",
+                    "capabilities": ["multiple_lives"],
+                    "version": "0.3.0",
+                }
+            )
+        if path == "catalog":
+            return web.json_response(
+                {
+                    "sources": [
+                        dict(source, catalog_id="source_" + source["id"])
+                        for source in sources
+                    ]
+                }
+            )
+        if path == "lives":
+            if request.method == "POST":
+                body = await request.json()
+                identity = "live_" + uuid.uuid4().hex[:12]
+                c = copy.deepcopy(config)
+                c.update(body["config"])
+                st = copy.deepcopy(status)
+                st.update(
+                    id=uuid.uuid4().hex,
+                    live_id=identity,
+                    live_name=body["name"],
+                    state="stopped",
+                )
+                st["selection"]["camera_id"] = c["sources"][0]["id"]
+                st["current_camera"] = dict(
+                    id=c["sources"][0]["id"],
+                    name=c["sources"][0]["name"],
+                    camera_entity="",
+                )
+                st["cameras"] = {x["id"]: dict(healthy=None) for x in c["sources"]}
+                profiles[identity] = {
+                    "config": c,
+                    "status": st,
+                    "received": {},
+                    "posts": [],
+                    "destination": "",
+                }
+                return web.json_response(st, status=201)
+            return web.json_response(
+                {
+                    "lives": [
+                        dict(
+                            live_id=k,
+                            name=v["status"]["live_name"],
+                            id=v["status"]["id"],
+                        )
+                        for k, v in profiles.items()
+                    ]
+                }
+            )
+        identity = "default"
+        if path.startswith("lives/"):
+            segments = path.split("/", 2)
+            identity = segments[1]
+            if identity not in profiles:
+                raise web.HTTPNotFound()
+            path = segments[2] if len(segments) == 3 else ""
+        profile = profiles[identity]
+        c = profile["config"]
+        st = profile["status"]
+        if path == "":
+            if request.method == "PATCH":
+                st["live_name"] = (await request.json())["name"]
+            elif request.method == "DELETE":
+                if st["state"] == "running":
+                    raise web.HTTPBadRequest()
+                del profiles[identity]
+                return web.json_response({"deleted": True})
+            return web.json_response(st)
         if path == "status":
-            return web.json_response(status)
+            return web.json_response(st)
         if path == "config":
             if request.method == "POST":
-                config.update(await request.json())
-            return web.json_response(config)
+                c.update(await request.json())
+            return web.json_response(c)
         if path == "metadata":
-            received.update(await request.json())
-        if path == "selection":
+            profile["received"].update(await request.json())
+        elif path == "selection":
             body = await request.json()
-            status["selection"].update(body)
-            status["selection"]["selection_revision"] = uuid.uuid4().hex
+            st["selection"].update(body)
+            st["selection"]["selection_revision"] = uuid.uuid4().hex
             source = next(
-                s for s in sources if s["id"] == status["selection"]["camera_id"]
+                x for x in c["sources"] if x["id"] == st["selection"]["camera_id"]
             )
-            status["current_camera"] = dict(
+            st["current_camera"] = dict(
                 id=source["id"], name=source["name"], camera_entity=""
             )
-        if path == "comparison":
-            posts.append(await request.json())
-        if path.endswith("snapshot.jpg"):
+        elif path == "comparison":
+            profile["posts"].append(await request.json())
+        elif path == "start":
+            st.update(state="running", mode=(await request.json())["mode"])
+        elif path == "stop":
+            st["state"] = "stopped"
+        elif path == "destination":
+            profile["destination"] = (await request.json())["url"]
+            st["destination_configured"] = bool(profile["destination"])
+        elif path.endswith("snapshot.jpg"):
             return web.Response(
                 body=b"\xff\xd8fixture\xff\xd9", content_type="image/jpeg"
             )
+        else:
+            raise web.HTTPNotFound()
         return web.json_response({"ok": True})
 
     app = web.Application(middlewares=[auth])
@@ -167,6 +265,10 @@ async def main():
         result = await hass.config_entries.flow.async_configure(
             form["flow_id"], connection
         )
+        assert result["step_id"] == "existing", result
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"live_id": "default"}
+        )
         assert result["type"] == "create_entry"
         entry = result["result"]
         await hass.async_block_till_done()
@@ -205,10 +307,7 @@ async def main():
                 "cta_duration",
             ]
         }
-        fields.update(
-            sensor_entity="sensor.demo_temperature",
-            ticker="Configured through the options menu",
-        )
+        fields.update(ticker="Configured through the options menu")
         result = await hass.config_entries.options.async_configure(
             options["flow_id"], fields
         )
@@ -219,10 +318,28 @@ async def main():
             "22.5",
             {"friendly_name": "Temperature", "unit_of_measurement": "°C"},
         )
+        hass.states.async_set(
+            "sensor.demo_humidity",
+            "75",
+            {"friendly_name": "Humidity", "unit_of_measurement": "%"},
+        )
+        options = await hass.config_entries.options.async_init(entry.entry_id)
+        options = await hass.config_entries.options.async_configure(
+            options["flow_id"], {"next_step_id": "information"}
+        )
+        result = await hass.config_entries.options.async_configure(
+            options["flow_id"],
+            {
+                "name": "First",
+                "sensor_entities": ["sensor.demo_temperature", "sensor.demo_humidity"],
+            },
+        )
+        assert result["type"] == "create_entry", result
+        await hass.async_block_till_done()
         hass.states.async_set("sun.sun", "above_horizon")
         await entry.runtime_data.async_refresh()
         assert (
-            received["sensor_text"] == "Temperature: 22.5 °C"
+            received["sensor_text"] == "Temperature: 22.5 °C  ·  Humidity: 75 %"
             and received["daylight"] is True
         )
         await hass.services.async_call(
@@ -333,6 +450,131 @@ async def main():
         assert connection["api_token"] not in json.dumps(
             diagnostics
         ) and "rtsp://" not in json.dumps(diagnostics)
+        form = await hass.config_entries.flow.async_init(
+            "live_studio", context={"source": "user"}
+        )
+        assert form["type"] == "menu"
+        form = await hass.config_entries.flow.async_configure(
+            form["flow_id"], {"next_step_id": "create_live"}
+        )
+        assert form["step_id"] == "create", form
+        bad = await hass.config_entries.flow.async_configure(
+            form["flow_id"], {"name": "Second", "camera_ids": [], "sensor_entities": []}
+        )
+        assert bad["errors"] == {"base": "cannot_create"}
+        result = await hass.config_entries.flow.async_configure(
+            form["flow_id"],
+            {"name": "Second", "camera_ids": ["source_wide"], "sensor_entities": []},
+        )
+        assert result["type"] == "create_entry", result
+        second = result["result"]
+        await hass.async_block_till_done()
+        assert second.state.value == "loaded"
+        child = second.data["live_id"]
+        assert profiles[child]["received"]["sensor_text"] == ""
+        assert received["sensor_text"] == "Temperature: 22.5 °C  ·  Humidity: 75 %"
+        child_id = profiles[child]["status"]["id"]
+        child_switch = registry.async_get_entity_id(
+            "switch", "live_studio", child_id + "_stream"
+        )
+        await hass.services.async_call(
+            "switch", "turn_on", {"entity_id": child_switch}, blocking=True
+        )
+        assert (
+            profiles[child]["status"]["state"] == "running"
+            and status["state"] == "stopped"
+        )
+        options = await hass.config_entries.options.async_init(second.entry_id)
+        options = await hass.config_entries.options.async_configure(
+            options["flow_id"], {"next_step_id": "delete_live"}
+        )
+        result = await hass.config_entries.options.async_configure(
+            options["flow_id"], {"confirm_delete": True}
+        )
+        assert result["errors"] == {"base": "stop_live_first"}
+        await hass.services.async_call(
+            "switch", "turn_off", {"entity_id": child_switch}, blocking=True
+        )
+        options = await hass.config_entries.options.async_init(second.entry_id)
+        options = await hass.config_entries.options.async_configure(
+            options["flow_id"], {"next_step_id": "information"}
+        )
+        await hass.config_entries.options.async_configure(
+            options["flow_id"],
+            {"name": "Second renamed", "sensor_entities": ["sensor.demo_humidity"]},
+        )
+        await hass.async_block_till_done()
+        await second.runtime_data.async_refresh()
+        assert second.title == "Live Studio · Second renamed"
+        assert profiles[child]["received"]["sensor_text"] == "Humidity: 75 %"
+        assert received["sensor_text"] == "Temperature: 22.5 °C  ·  Humidity: 75 %"
+        # A missing reading affects only this live's selected sensor, never invents data.
+        hass.states.async_set("sensor.demo_humidity", "unavailable")
+        await second.runtime_data.async_refresh()
+        await entry.runtime_data.async_refresh()
+        assert profiles[child]["received"]["sensor_text"] == ""
+        assert received["sensor_text"] == "Temperature: 22.5 °C"
+        form = await hass.config_entries.flow.async_init(
+            "live_studio", context={"source": "reconfigure", "entry_id": entry.entry_id}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            form["flow_id"], dict(connection, live_id=child)
+        )
+        assert result["errors"] == {"base": "wrong_live"}
+        result = await hass.config_entries.flow.async_configure(
+            form["flow_id"], dict(connection, live_id="default")
+        )
+        assert (
+            result["type"] == "abort" and result["reason"] == "reconfigure_successful"
+        )
+        await hass.async_block_till_done()
+        options = await hass.config_entries.options.async_init(second.entry_id)
+        options = await hass.config_entries.options.async_configure(
+            options["flow_id"], {"next_step_id": "destination"}
+        )
+        result = await hass.config_entries.options.async_configure(
+            options["flow_id"],
+            {
+                "destination_url": "rtmp://fixture.invalid/live/private-fixture-key",
+                "clear_destination": False,
+            },
+        )
+        assert result["type"] == "create_entry"
+        await hass.async_block_till_done()
+        assert "destination_url" not in second.options and profiles[child][
+            "destination"
+        ].endswith("private-fixture-key")
+        options = await hass.config_entries.options.async_init(second.entry_id)
+        options = await hass.config_entries.options.async_configure(
+            options["flow_id"], {"next_step_id": "delete_live"}
+        )
+        result = await hass.config_entries.options.async_configure(
+            options["flow_id"], {"confirm_delete": True}
+        )
+        assert result["type"] == "abort" and result["reason"] == "live_deleted"
+        await hass.async_block_till_done()
+        assert (
+            child not in profiles
+            and hass.config_entries.async_get_entry(second.entry_id) is None
+        )
+        assert entry.state.value == "loaded"
+        from custom_components.live_studio import async_migrate_entry
+
+        hass.config_entries.async_update_entry(
+            entry, version=1, options={"sensor_entity": "sensor.demo_temperature"}
+        )
+        assert await async_migrate_entry(hass, entry)
+        await hass.async_block_till_done()
+        assert entry.version == 2 and entry.options["sensor_entities"] == [
+            "sensor.demo_temperature"
+        ]
+        assert "sensor_entity" not in entry.options
+        assert registry.async_get_entity_id(
+            "text", "live_studio", status["id"] + "_ticker"
+        ) == entity("text", "ticker")
+        print(
+            "PASS create/manage multiple lives, independent optional sensor lists, isolated controls, safe destinations/deletion, identity-preserving reconfiguration and legacy migration"
+        )
         assert await hass.config_entries.async_unload(entry.entry_id)
         print(
             "PASS optional vision provider, validated source IDs, snapshot client, sanitized failures, diagnostics and clean unload"

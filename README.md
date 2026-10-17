@@ -1,11 +1,13 @@
 # Live Studio
 
-Integración de Home Assistant para un estudio local de streaming. **0.2.0 — versión
-de desarrollo**, licencia MIT. Requiere Live Studio Engine 0.2.0 o posterior.
+Integración de Home Assistant para un estudio local de streaming. **0.3.0 — versión
+de desarrollo**, licencia MIT. Requiere Live Studio Engine 0.3.0 o posterior.
 
 ## Qué incluye
 
-- Asistente de conexión por URL y token, sin YAML.
+- Crear y administrar varios lives independientes desde un solo motor.
+- Asistente inicial de conexión por URL y token, sin YAML; se reutiliza para nuevos lives.
+- Nombre propio,1–8 fuentes de cámara y0–8 sensores opcionales por live.
 - Menús de cámaras, vídeo/música, textos y selección automática.
 - Selector manual/automático con cambios de cámara sin reiniciar música ni salida.
 - Sensores de cámara actual, vídeo reciente, estado y decisión de selección.
@@ -43,7 +45,8 @@ exactos dependen del registro de cada instalación. Los textos aceptan la acció
 El sensor de cámara actual incluye `camera_entity` para asociarlo con automatizaciones
 propias. La cámara de vista actual y el binario de vídeo permiten validar frescura.
 
-El sensor de información se elige en Opciones y se oculta si deja de estar disponible.
+La lista de sensores se elige por live en Opciones → Live y sensores. Puede quedar
+vacía; solo se omiten las lecturas no disponibles. Las líneas largas se desplazan.
 Las imágenes de comparación se envían al proveedor de LLM Vision elegido: revisar
 su privacidad y costes. Sin habilitar IA, el cambio manual y la recuperación por
 fallo funcionan de forma local. No se requiere ninguna cuenta de Live Studio.
@@ -54,3 +57,22 @@ Home Assistant o descargar la integración. Detener explícitamente antes de ret
 No incluye editor gráfico, GPU, OAuth/Analytics de YouTube ni WhatsApp. Esos módulos
 pueden convivir con Live Studio mediante entidades; no se migran automáticamente.
 Mínimo Home Assistant 2026.10.0; verificado con 2026.10.1.
+
+## Crear y manejar cada live
+
+Ajustes → Integraciones → Live Studio → Añadir entrada → Crear un live. Elegir el
+motor existente, nombre, una o varias fuentes y sensores opcionales. El live se
+crea detenido y sin destino. Si no hay fuentes, el asistente pide la primera URL
+RTSP. En Opciones se agregan otras fuentes o se seleccionan las ya configuradas.
+
+Cada entrada y dispositivo tienen controles, selección de cámara, textos, reglas,
+música y destino propios. En Destino de emisión se introduce su URL privada con
+clave; no se expone en diagnósticos ni se copia a las opciones de HA. Iniciar,
+detener o eliminar un live no modifica otro. Para borrar debe estar detenido y
+confirmarse la acción. La app completa sigue siendo un punto común: reiniciarla
+interrumpe todas sus salidas. No hace falta una app adicional por cada live.
+
+Las entidades y el sensor único de0.2 migran sin perder sus IDs: aquel sensor pasa a
+una lista de un elemento. Un live puede tener una lista vacía. La opción nativa
+Reconfigurar permite reconectar un live migrado a otro motor solo si conserva su
+identidad; no permite sustituirlo accidentalmente por otro live.

@@ -12,6 +12,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .api import StudioAuthError, StudioClient, StudioError
 from .const import DOMAIN, PLATFORMS
+from .information import selected_sensors, sensor_text
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,14 +37,12 @@ class StudioCoordinator(DataUpdateCoordinator):
             async_get_clientsession(hass),
             entry.data["endpoint"],
             entry.data["api_token"],
+            entry.data.get("live_id"),
         )
 
     async def _async_update_data(self):
         try:
-            sensor = self.hass.states.get(self.entry.options.get("sensor_entity") or "")
-            text = ""
-            if sensor and sensor.state not in ("unknown", "unavailable"):
-                text = f"{sensor.name}: {sensor.state} {sensor.attributes.get('unit_of_measurement','')}".strip()
+            text = sensor_text(self.hass, self.entry.options)
             sun = self.hass.states.get("sun.sun")
             daylight = (
                 (sun.state == "above_horizon")
@@ -57,6 +56,14 @@ class StudioCoordinator(DataUpdateCoordinator):
                 "status": await self.client.request("status"),
                 "config": await self.client.request("config"),
             }
+            result["status"]["information_sensors"] = selected_sensors(
+                self.entry.options
+            )
+            name = result["status"].get("live_name")
+            if name and self.entry.title != "Live Studio · " + name:
+                self.hass.config_entries.async_update_entry(
+                    self.entry, title="Live Studio · " + name
+                )
             # The timer is driven by the coordinator; no second polling loop.
             if (
                 self.ready
@@ -127,3 +134,14 @@ async def async_unload_entry(hass, entry):
     await entry.runtime_data.close()
     # The engine deliberately continues when Core restarts or this entry unloads.
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_migrate_entry(hass, entry):
+    if entry.version > 2:
+        return False
+    if entry.version == 1:
+        options = dict(entry.options)
+        options["sensor_entities"] = selected_sensors(options)
+        options.pop("sensor_entity", None)
+        hass.config_entries.async_update_entry(entry, options=options, version=2)
+    return True
