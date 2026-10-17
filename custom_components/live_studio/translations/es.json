@@ -1,0 +1,88 @@
+{
+  "title": "Live Studio",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Conecta el motor de streaming",
+        "description": "Instala primero Live Studio Engine. Usa su dirección HTTP interna y el token API configurado en el complemento.",
+        "data": {
+          "endpoint": "URL del motor",
+          "api_token": "Token API"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Actualizar token API",
+        "data": {
+          "api_token": "Token API"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "El motor rechazó el token API.",
+      "cannot_connect": "No se puede conectar al motor. Revisa la dirección y su disponibilidad."
+    },
+    "abort": {
+      "already_configured": "Este motor ya está configurado.",
+      "reauth_successful": "Token API actualizado."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Emisión y elementos en pantalla",
+        "description": "Detén la salida antes de cambiar cámara, música o codificación. Los textos pueden cambiar mientras se emite. Deja un texto vacío para ocultarlo.",
+        "data": {
+          "rtsp_url": "URL RTSP de la cámara",
+          "music_directory": "Carpeta de MP3",
+          "title": "Título en pantalla",
+          "show_clock": "Mostrar reloj local",
+          "timezone": "Zona horaria IANA",
+          "ticker": "Marquesina",
+          "cta": "Aviso periódico",
+          "width": "Ancho",
+          "height": "Alto",
+          "fps": "Fotogramas por segundo",
+          "threads": "Hilos de codificación",
+          "bitrate_kbps": "Tasa de vídeo (Kbps)",
+          "cta_period": "Segundos entre avisos",
+          "cta_duration": "Duración del aviso (segundos)",
+          "sensor_entity": "Sensor de Home Assistant (opcional)"
+        }
+      }
+    },
+    "error": {
+      "cannot_apply": "No se pudieron aplicar los ajustes. Revisa los valores y detén la salida antes de cambiar el vídeo."
+    }
+  },
+  "entity": {
+    "switch": {
+      "stream": {
+        "name": "Emisión en vivo"
+      }
+    },
+    "button": {
+      "preview": {
+        "name": "Grabar vista previa de 20 segundos"
+      },
+      "stop": {
+        "name": "Detener salida"
+      }
+    },
+    "text": {
+      "title": {
+        "name": "Título en pantalla"
+      },
+      "ticker": {
+        "name": "Marquesina"
+      },
+      "cta": {
+        "name": "Aviso periódico"
+      }
+    },
+    "sensor": {
+      "status": {
+        "name": "Estado del motor"
+      }
+    }
+  }
+}

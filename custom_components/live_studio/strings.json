@@ -1,0 +1,88 @@
+{
+  "title": "Live Studio",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect your streaming engine",
+        "description": "Install Live Studio Engine first. Use its internal HTTP address and the API token configured in the companion.",
+        "data": {
+          "endpoint": "Engine URL",
+          "api_token": "API token"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Update API token",
+        "data": {
+          "api_token": "API token"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "The engine rejected the API token.",
+      "cannot_connect": "Cannot connect to the engine. Check its address and availability."
+    },
+    "abort": {
+      "already_configured": "This engine is already configured.",
+      "reauth_successful": "API token updated."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Stream and overlay settings",
+        "description": "Stop the output before changing source, music or encoder settings. Overlay text can change while streaming. Leaving a text empty hides it.",
+        "data": {
+          "rtsp_url": "RTSP camera URL",
+          "music_directory": "MP3 folder",
+          "title": "On-screen title",
+          "show_clock": "Show local clock",
+          "timezone": "IANA timezone",
+          "ticker": "Scrolling ticker",
+          "cta": "Periodic message",
+          "width": "Width",
+          "height": "Height",
+          "fps": "Frames per second",
+          "threads": "Encoder threads",
+          "bitrate_kbps": "Video bitrate (Kbps)",
+          "cta_period": "Seconds between messages",
+          "cta_duration": "Message duration (seconds)",
+          "sensor_entity": "Home Assistant sensor (optional)"
+        }
+      }
+    },
+    "error": {
+      "cannot_apply": "Cannot apply settings. Check values and stop the output before changing video settings."
+    }
+  },
+  "entity": {
+    "switch": {
+      "stream": {
+        "name": "Live output"
+      }
+    },
+    "button": {
+      "preview": {
+        "name": "Record 20-second preview"
+      },
+      "stop": {
+        "name": "Stop output"
+      }
+    },
+    "text": {
+      "title": {
+        "name": "On-screen title"
+      },
+      "ticker": {
+        "name": "Scrolling ticker"
+      },
+      "cta": {
+        "name": "Periodic message"
+      }
+    },
+    "sensor": {
+      "status": {
+        "name": "Engine status"
+      }
+    }
+  }
+}
