@@ -9,10 +9,11 @@ from homeassistant.components import websocket_api
 from .api import StudioError
 from .overlay import coordinator
 from .const import DOMAIN
+from .frigate import catalog_sources
 
 
 async def catalog(current):
-    sources = (await current.client.request("catalog", server=True))["sources"]
+    sources, frigate_names = await catalog_sources(current.hass, current.client)
     config = await current.client.request("config")
     status = await current.client.request("status")
     selected = {source["rtsp_url"]: source["name"] for source in config["sources"]}
@@ -36,7 +37,10 @@ async def catalog(current):
             "cameras": [
                 {
                     "id": source["catalog_id"],
-                    "name": selected.get(source["rtsp_url"], source["name"])
+                    "name": frigate_names.get(
+                        source["rtsp_url"],
+                        selected.get(source["rtsp_url"], source["name"]),
+                    )
                     + (
                         " · " + ", ".join(owners[source["rtsp_url"]])
                         if source["rtsp_url"] in owners

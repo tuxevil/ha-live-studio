@@ -9,6 +9,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .api import StudioAuthError, StudioClient, StudioError, endpoint
 from .const import DOMAIN
 from .information import selected_sensors
+from .frigate import catalog_sources
 
 
 class LiveStudioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -150,7 +151,7 @@ class LiveStudioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_create(self, user_input=None):
         errors = {}
         try:
-            catalog = (await self.client().request("catalog", server=True))["sources"]
+            catalog, _ = await catalog_sources(self.hass, self.client())
             catalog += getattr(self, "new_sources", [])
             self.catalog = {s["catalog_id"]: s for s in catalog}
             if not self.catalog:
@@ -662,9 +663,7 @@ class LiveStudioOptionsFlow(config_entries.OptionsFlow):
     async def async_step_camera_pick(self, user_input=None):
         errors = {}
         try:
-            catalog = (await self.coordinator.client.request("catalog", server=True))[
-                "sources"
-            ]
+            catalog, _ = await catalog_sources(self.hass, self.coordinator.client)
             choices = {s["catalog_id"]: s for s in catalog}
             current = {s["rtsp_url"]: s for s in self.current()["sources"]}
             if user_input:

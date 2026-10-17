@@ -529,17 +529,82 @@ async def main():
         print(
             "PASS bundled overlay frontend, sanitized editor API, administrator-only changes, independent lives and composed camera proxy"
         )
+        from custom_components.live_studio.frigate import discover_sources
+        from unittest.mock import AsyncMock, patch
+
+        entries = [
+            SimpleNamespace(
+                platform="frigate",
+                entity_id="camera." + name,
+                disabled_by=None,
+                config_entry_id=server,
+                name=None,
+                original_name=None,
+            )
+            for name, server in [
+                ("known", "fg1"),
+                ("new", "fg1"),
+                ("other", "fg2"),
+                ("broken", "fg1"),
+            ]
+        ]
+        fake_hass = SimpleNamespace(
+            states=SimpleNamespace(
+                get=lambda identity: SimpleNamespace(
+                    attributes={"friendly_name": "Friendly " + identity}
+                )
+            )
+        )
+
+        async def fixture_stream(hass, identity):
+            if identity == "camera.broken":
+                raise HomeAssistantError("private failure")
+            return "rtsp://frigate-internal:8554/" + identity.removeprefix("camera.")
+
+        known = [
+            dict(
+                camera_entity="camera.known",
+                rtsp_url="rtsp://reachable.invalid:8554/known",
+            )
+        ]
+        with patch(
+            "custom_components.live_studio.frigate.entity_registry.async_get",
+            return_value=SimpleNamespace(entities={e.entity_id: e for e in entries}),
+        ), patch(
+            "custom_components.live_studio.frigate.async_get_stream_source",
+            new=AsyncMock(side_effect=fixture_stream),
+        ):
+            discovered = await discover_sources(fake_hass, known)
+        by_camera = {source["camera_entity"]: source for source in discovered}
+        assert len(discovered) == 3
+        assert (
+            by_camera["camera.new"]["rtsp_url"] == "rtsp://reachable.invalid:8554/new"
+        )
+        assert (
+            by_camera["camera.other"]["rtsp_url"]
+            == "rtsp://frigate-internal:8554/other"
+        )
+        assert by_camera["camera.new"]["name"] == "Friendly camera.new"
+        print(
+            "PASS Frigate auto-discovery: friendly names, external restream origin reuse, separate Frigate servers and unavailable source isolation"
+        )
         from custom_components.live_studio.cameras import get_cameras, update_cameras
 
         camera_connection = Connection()
-        await unwrap(get_cameras)(hass, camera_connection, {"id": 4, "entity_id": overlay_entity})
+        await unwrap(get_cameras)(
+            hass, camera_connection, {"id": 4, "entity_id": overlay_entity}
+        )
         camera_result = camera_connection.result
         assert "rtsp_url" not in json.dumps(camera_result)
         assert "fixture.invalid" not in json.dumps(camera_result)
         assert camera_result["cameras"]
         original_sources = copy.deepcopy(config["sources"])
-        edit = {"id": 5, "entity_id": overlay_entity, "revision": camera_result["revision"],
-                "camera_ids": [camera_result["cameras"][0]["id"]]}
+        edit = {
+            "id": 5,
+            "entity_id": overlay_entity,
+            "revision": camera_result["revision"],
+            "camera_ids": [camera_result["cameras"][0]["id"]],
+        }
         forbidden = Connection(False)
         await unwrap(update_cameras)(hass, forbidden, edit)
         assert forbidden.error == "unauthorized"
@@ -552,10 +617,52 @@ async def main():
         assert config["sources"] == original_sources
         assert len(profiles[child]["config"]["sources"]) == 1
         assert len(second.runtime_data.data["config"]["sources"]) == 1
+        discovered_source = dict(
+            catalog_id="source_auto_sky",
+            id="camera_auto_sky",
+            name="Sky",
+            rtsp_url="rtsp://fixture.invalid/sky",
+            camera_entity="camera.sky",
+            description="",
+        )
+        with patch(
+            "custom_components.live_studio.frigate.discover_sources",
+            new=AsyncMock(return_value=[discovered_source]),
+        ):
+            auto_connection = Connection()
+            await unwrap(get_cameras)(
+                hass, auto_connection, {"id": 6, "entity_id": overlay_entity}
+            )
+            auto_payload = auto_connection.result
+            assert any(
+                source["id"] == "source_auto_sky" for source in auto_payload["cameras"]
+            )
+            assert "rtsp_url" not in json.dumps(auto_payload)
+            await unwrap(update_cameras)(
+                hass,
+                auto_connection,
+                {
+                    "id": 7,
+                    "entity_id": overlay_entity,
+                    "revision": auto_payload["revision"],
+                    "camera_ids": ["source_auto_sky"],
+                },
+            )
+            assert auto_connection.error is None
+            assert (
+                profiles[child]["config"]["sources"][0]["camera_entity"] == "camera.sky"
+            )
+            await hass.async_block_till_done()
+            assert config["sources"] == original_sources
+        print(
+            "PASS newly discovered Frigate camera selected by opaque ID without entering a name or RTSP URL"
+        )
         # Restore the fixture for subsequent lifecycle tests.
         profiles[child]["config"]["sources"] = copy.deepcopy(sources)
         await second.runtime_data.async_request_refresh()
-        print("PASS camera checklist API: no RTSP disclosure, admin-only, stale-edit protection, independent live changes and entity reload")
+        print(
+            "PASS camera checklist API: no RTSP disclosure, admin-only, stale-edit protection, independent live changes and entity reload"
+        )
         child_switch = registry.async_get_entity_id(
             "switch", "live_studio", child_id + "_stream"
         )

@@ -1,6 +1,6 @@
 # Live Studio
 
-Integración de Home Assistant para un estudio local de streaming. **0.5.1 — versión
+Integración de Home Assistant para un estudio local de streaming. **0.5.2 — versión
 de desarrollo**, licencia MIT. Requiere Live Studio Engine 0.5.1 o posterior para editar cámaras durante la emisión.
 
 ## Qué incluye
@@ -115,9 +115,11 @@ type: custom:live-studio-cameras-card
 entity: sensor.live_studio_engine_status
 ```
 
-Marca o desmarca cámaras y pulsa **Guardar cámaras**. Cada directo mantiene su
+La lista descubre automáticamente las entidades de cámara de la integración
+**Frigate** instalada en Home Assistant, con sus nombres y fuentes RTSP. Marca o
+desmarca las que quieras y pulsa **Guardar cámaras**. Cada directo mantiene su
 propia selección. Las cámaras retiradas permanecen en la biblioteca del motor.
-**Agregar otra cámara RTSP** permite registrar una fuente nueva mediante nombre
+**Otra fuente (avanzado)** permite registrar una fuente ajena a Frigate mediante nombre
 y dirección privada. Los nombres deben ser únicos dentro de un live; al importar
 nombres repetidos se añade un sufijo. Se admiten entre1 y8 fuentes.
 
@@ -126,3 +128,11 @@ las direcciones RTSP y el token del motor no se devuelven al navegador. La emisi
 y la música continúan al cambiar la lista. Si retiras la cámara activa, se elige
 otra fuente del mismo live; una fuente nueva puede tardar en entregar vídeo.
 Los cambios de resolución, FPS y codificación siguen requiriendo detener la salida.
+
+El descubrimiento utiliza la API de cámaras de Home Assistant y respeta las
+plantillas RTSP de Frigate. Para un motor externo, reutiliza el origen RTSP ya
+configurado para la misma instancia de Frigate; así evita enviar nombres DNS
+internos de apps al servidor externo. No abre decodificadores para cámaras
+desmarcadas. Las entidades deshabilitadas o sin una fuente RTSP disponible no
+se ofrecen como fuentes reproducibles. Frigate es opcional; las fuentes
+registradas manualmente siguen disponibles cuando no está instalado.
