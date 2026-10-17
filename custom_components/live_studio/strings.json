@@ -166,7 +166,8 @@
           "day_bonus": "Daytime preference bonus (points)",
           "confirmations": "Consecutive confirmations",
           "minimum_dwell_minutes": "Minimum time between view changes (minutes)",
-          "comparison_interval_minutes": "Comparison interval (minutes)"
+          "comparison_interval_minutes": "Comparison interval (minutes)",
+          "ai_focus": "Live subject and visual criteria"
         }
       },
       "camera_pick": {

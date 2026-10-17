@@ -382,6 +382,7 @@ async def main():
         )
 
         async def model(call):
+            assert "Test subject: chickens" in call.data["message"]
             assert len(call.data["image_entity"]) == 2
             assert set(call.data["image_entity"]) == {
                 entity("camera", "view_wide"),
@@ -410,6 +411,7 @@ async def main():
                 ai_enabled=True,
                 ai_provider="fixture-provider",
                 ai_model="fixture-vision-model",
+                ai_focus="Test subject: chickens",
                 preferred_camera="wide",
                 minimum_margin=10,
                 day_bonus=5,

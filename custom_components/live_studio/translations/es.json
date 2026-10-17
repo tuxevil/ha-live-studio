@@ -166,7 +166,8 @@
           "day_bonus": "Preferencia diurna adicional (puntos)",
           "confirmations": "Confirmaciones consecutivas",
           "minimum_dwell_minutes": "Tiempo mínimo entre cambios (minutos)",
-          "comparison_interval_minutes": "Intervalo de comparación (minutos)"
+          "comparison_interval_minutes": "Intervalo de comparación (minutos)",
+          "ai_focus": "Tema y criterios visuales del live"
         }
       },
       "camera_pick": {

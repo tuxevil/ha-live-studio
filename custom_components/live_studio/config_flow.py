@@ -358,6 +358,7 @@ class LiveStudioOptionsFlow(config_entries.OptionsFlow):
             "ai_enabled",
             "ai_provider",
             "ai_model",
+            "ai_focus",
         }
         data = {k: v for k, v in self.config_entry.options.items() if k in keys}
         data.update(updates)
@@ -586,6 +587,7 @@ class LiveStudioOptionsFlow(config_entries.OptionsFlow):
                         ai_enabled=enabled,
                         ai_provider=provider or "",
                         ai_model=model,
+                        ai_focus=user_input.get("ai_focus", "").strip(),
                     )
                 except StudioError:
                     errors["base"] = "cannot_apply"
@@ -598,6 +600,9 @@ class LiveStudioOptionsFlow(config_entries.OptionsFlow):
                 selector.ConfigEntrySelectorConfig(integration="llmvision")
             ),
             vol.Required("ai_model", default=options.get("ai_model", "")): str,
+            vol.Optional("ai_focus", default=options.get("ai_focus", "")): vol.All(
+                str, vol.Length(max=2000)
+            ),
         }
         if current["sources"]:
             fields[

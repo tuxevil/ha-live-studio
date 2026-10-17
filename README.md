@@ -1,6 +1,6 @@
 # Live Studio
 
-Integración de Home Assistant para un estudio local de streaming. **0.5.2 — versión
+Integración de Home Assistant para un estudio local de streaming. **0.5.3 — versión
 de desarrollo**, licencia MIT. Requiere Live Studio Engine 0.5.1 o posterior para editar cámaras durante la emisión.
 
 ## Qué incluye
@@ -136,3 +136,9 @@ internos de apps al servidor externo. No abre decodificadores para cámaras
 desmarcadas. Las entidades deshabilitadas o sin una fuente RTSP disponible no
 se ofrecen como fuentes reproducibles. Frigate es opcional; las fuentes
 registradas manualmente siguen disponibles cuando no está instalado.
+
+Cada live puede definir su tema y criterios en Opciones → Selección automática →
+**Tema y criterios visuales del live**. Por ejemplo, un canal de animales puede
+priorizar animales visibles y encuadre antes que un paisaje vacío. Si se deja
+vacío se conservan los criterios de paisaje. El proveedor y modelo siguen siendo
+opcionales e independientes para cada live.
