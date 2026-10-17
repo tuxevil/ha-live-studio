@@ -112,5 +112,11 @@ async def setup(hass):
     frontend.add_extra_js_url(
         hass, "/live_studio_static/live-studio-overlay-card.js?v=0.5.0"
     )
+    frontend.add_extra_js_url(
+        hass, "/live_studio_static/live-studio-cameras-card.js?v=0.5.1"
+    )
+    from .cameras import setup as setup_cameras
+
+    setup_cameras(hass)
     websocket_api.async_register_command(hass, get_overlay)
     websocket_api.async_register_command(hass, update_overlay)

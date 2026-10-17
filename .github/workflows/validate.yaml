@@ -27,3 +27,5 @@ jobs:
       - uses: actions/checkout@v4
       - run: node --check custom_components/live_studio/frontend/live-studio-overlay-card.js
       - run: node tests/overlay_card.cjs
+      - run: node --check custom_components/live_studio/frontend/live-studio-cameras-card.js
+      - run: node tests/cameras_card.cjs

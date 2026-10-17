@@ -194,7 +194,10 @@ async def main():
             return web.json_response(st)
         if path == "config":
             if request.method == "POST":
-                c.update(await request.json())
+                patch = await request.json()
+                c.update(patch)
+                if "sources" in patch:
+                    st["sources_revision"] = uuid.uuid4().hex
             return web.json_response(c)
         if path == "metadata":
             profile["received"].update(await request.json())
@@ -526,6 +529,33 @@ async def main():
         print(
             "PASS bundled overlay frontend, sanitized editor API, administrator-only changes, independent lives and composed camera proxy"
         )
+        from custom_components.live_studio.cameras import get_cameras, update_cameras
+
+        camera_connection = Connection()
+        await unwrap(get_cameras)(hass, camera_connection, {"id": 4, "entity_id": overlay_entity})
+        camera_result = camera_connection.result
+        assert "rtsp_url" not in json.dumps(camera_result)
+        assert "fixture.invalid" not in json.dumps(camera_result)
+        assert camera_result["cameras"]
+        original_sources = copy.deepcopy(config["sources"])
+        edit = {"id": 5, "entity_id": overlay_entity, "revision": camera_result["revision"],
+                "camera_ids": [camera_result["cameras"][0]["id"]]}
+        forbidden = Connection(False)
+        await unwrap(update_cameras)(hass, forbidden, edit)
+        assert forbidden.error == "unauthorized"
+        stale = Connection()
+        await unwrap(update_cameras)(hass, stale, dict(edit, revision="stale"))
+        assert stale.error == "conflict"
+        await unwrap(update_cameras)(hass, camera_connection, edit)
+        assert camera_connection.error is None
+        await hass.async_block_till_done()
+        assert config["sources"] == original_sources
+        assert len(profiles[child]["config"]["sources"]) == 1
+        assert len(second.runtime_data.data["config"]["sources"]) == 1
+        # Restore the fixture for subsequent lifecycle tests.
+        profiles[child]["config"]["sources"] = copy.deepcopy(sources)
+        await second.runtime_data.async_request_refresh()
+        print("PASS camera checklist API: no RTSP disclosure, admin-only, stale-edit protection, independent live changes and entity reload")
         child_switch = registry.async_get_entity_id(
             "switch", "live_studio", child_id + "_stream"
         )
