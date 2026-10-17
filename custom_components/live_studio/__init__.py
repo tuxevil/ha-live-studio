@@ -116,6 +116,13 @@ class StudioCoordinator(DataUpdateCoordinator):
         await self.async_request_refresh()
 
 
+async def async_setup(hass, config):
+    from .overlay import setup
+
+    await setup(hass)
+    return True
+
+
 async def async_setup_entry(hass, entry):
     coordinator = StudioCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()

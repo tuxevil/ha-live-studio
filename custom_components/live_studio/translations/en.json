@@ -297,6 +297,9 @@
     "camera": {
       "current_view": {
         "name": "Selected camera view"
+      },
+      "overlay_view": {
+        "name": "Overlay preview"
       }
     },
     "binary_sensor": {

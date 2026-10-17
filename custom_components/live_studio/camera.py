@@ -8,6 +8,11 @@ async def async_setup_entry(hass, entry, async_add_entities):
     c = entry.runtime_data
     async_add_entities(
         [StudioCamera(c, None)]
+        + (
+            [StudioCamera(c, None, overlay=True)]
+            if "overlay_layout" in c.data["config"]
+            else []
+        )
         + [StudioCamera(c, s) for s in c.data["config"]["sources"]]
     )
 
@@ -15,13 +20,22 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class StudioCamera(StudioEntity, Camera):
     _attr_is_streaming = False
 
-    def __init__(self, c, source):
+    def __init__(self, c, source, overlay=False):
         Camera.__init__(self)
         StudioEntity.__init__(
-            self, c, "view_" + source["id"] if source else "current_view"
+            self,
+            c,
+            (
+                "overlay_view"
+                if overlay
+                else ("view_" + source["id"] if source else "current_view")
+            ),
         )
         self.source = source
-        if source:
+        self.overlay = overlay
+        if overlay:
+            self._attr_translation_key = "overlay_view"
+        elif source:
             self._attr_name = source["name"]
         else:
             self._attr_translation_key = "current_view"
@@ -66,6 +80,8 @@ class StudioCamera(StudioEntity, Camera):
         if self.source_id is None:
             return None
         try:
-            return await self.coordinator.client.image(self.source_id)
+            return await self.coordinator.client.image(
+                None if self.overlay else self.source_id
+            )
         except StudioError:
             return None

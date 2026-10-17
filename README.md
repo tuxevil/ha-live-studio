@@ -82,3 +82,26 @@ identidad; no permite sustituirlo accidentalmente por otro live.
 The companion can run as an HAOS app or on an external Linux machine/container. The same integration controls either through its authenticated HTTP API. No Proxmox or GPU is required. Preserve engine/profile identities when relocating existing entries and use Reconfigure to change their endpoint. Never run two senders with the same ingest key.
 
 Video options select CPU, VAAPI or automatic encoder/decoder, an optional render device and a bounded camera buffer. CPU is the default; explicit VAAPI requires a working device. Automatic mode reports its selected backend/fallback. VAAPI support depends on the host driver and codecs; test actual inputs.
+
+### Overlay editor (engine0.5.0+)
+
+The integration includes a Lovelace card; no separate frontend repository or
+manual resource registration is needed. Add a custom card with this configuration
+and select the status entity belonging to the live you want to edit:
+
+```yaml
+type: custom:live-studio-overlay-card
+entity: sensor.live_studio_engine_status
+```
+
+The card groups controls by element and includes quick camera/date/time
+visibility switches. Configure the top/bottom information bar, placement, offsets,
+font size, scrolling speed/direction, foreground/background colors, opacity,
+shadows, date/time formats and CTA timing. Changes apply to that live without
+restarting its encoder or music. Font sizes, offsets and speeds scale from a
+1080p reference. Editing requires a Home Assistant administrator. Text remains
+literal and engine credentials are never sent to the browser.
+
+Each live also exposes an **Overlay preview** camera showing a fresh composed
+JPEG. Add it as a normal picture-entity card, or set `preview: true` on the editor
+card. With an existing browser tab, refresh once after upgrading to load the card.

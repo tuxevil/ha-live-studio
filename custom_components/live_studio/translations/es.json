@@ -297,6 +297,9 @@
     "camera": {
       "current_view": {
         "name": "Vista de la cámara seleccionada"
+      },
+      "overlay_view": {
+        "name": "Vista del diseño"
       }
     },
     "binary_sensor": {

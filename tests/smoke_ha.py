@@ -66,6 +66,7 @@ async def main():
         cta="Like and subscribe",
         cta_period=600,
         cta_duration=12,
+        overlay_layout={"band": {"position": "bottom"}},
     )
     status = dict(
         id="test-engine-unique-id",
@@ -283,9 +284,9 @@ async def main():
         entities = [
             e for e in registry.entities.values() if e.config_entry_id == entry.entry_id
         ]
-        assert len(entities) == 20, [e.entity_id for e in entities]
+        assert len(entities) == 21, [e.entity_id for e in entities]
         print(
-            "PASS installation, authentication and 20 native entities including camera proxies"
+            "PASS installation, authentication and 21 native entities including camera proxies"
         )
         options = await hass.config_entries.options.async_init(entry.entry_id)
         assert options["type"] == "menu"
@@ -474,6 +475,57 @@ async def main():
         assert profiles[child]["received"]["sensor_text"] == ""
         assert received["sensor_text"] == "Temperature: 22.5 °C  ·  Humidity: 75 %"
         child_id = profiles[child]["status"]["id"]
+        from types import SimpleNamespace
+        from inspect import unwrap
+        from custom_components.live_studio.overlay import get_overlay, update_overlay
+
+        class Connection:
+            def __init__(self, admin=True):
+                self.user = SimpleNamespace(is_admin=admin)
+                self.result = self.error = None
+
+            def send_result(self, identity, result):
+                self.result = result
+
+            def send_error(self, identity, code, message):
+                self.error = code
+
+        overlay_entity = registry.async_get_entity_id(
+            "sensor", "live_studio", child_id + "_status"
+        )
+        connection_test = Connection()
+        await unwrap(get_overlay)(
+            hass, connection_test, {"id": 1, "entity_id": overlay_entity}
+        )
+        assert "rtsp_url" not in json.dumps(connection_test.result)
+        assert "api_token" not in json.dumps(connection_test.result)
+        message = {
+            "id": 2,
+            "entity_id": overlay_entity,
+            "changes": {"overlay_layout": {"band": {"position": "top"}}},
+        }
+        await unwrap(update_overlay)(hass, connection_test, message)
+        assert connection_test.error is None
+        assert profiles[child]["config"]["overlay_layout"]["band"]["position"] == "top"
+        assert config["overlay_layout"]["band"]["position"] == "bottom"
+        forbidden = Connection(False)
+        await unwrap(update_overlay)(hass, forbidden, message)
+        assert forbidden.error == "unauthorized"
+        forbidden = Connection()
+        await unwrap(update_overlay)(
+            hass,
+            forbidden,
+            {
+                "id": 3,
+                "entity_id": overlay_entity,
+                "changes": {"destination_url": "rtmp://fixture.invalid/not-allowed"},
+            },
+        )
+        assert forbidden.error == "cannot_apply"
+        assert (await second.runtime_data.client.image(None)).startswith(b"\xff\xd8")
+        print(
+            "PASS bundled overlay frontend, sanitized editor API, administrator-only changes, independent lives and composed camera proxy"
+        )
         child_switch = registry.async_get_entity_id(
             "switch", "live_studio", child_id + "_stream"
         )

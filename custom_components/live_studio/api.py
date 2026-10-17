@@ -66,7 +66,11 @@ class StudioClient:
     async def image(self, identity):
         try:
             async with self.session.get(
-                self.route("cameras/" + identity + "/snapshot.jpg"),
+                self.route(
+                    "cameras/" + identity + "/snapshot.jpg"
+                    if identity
+                    else "overlay/snapshot.jpg"
+                ),
                 headers={"Authorization": "Bearer " + self.token},
                 timeout=aiohttp.ClientTimeout(total=15),
             ) as response:
