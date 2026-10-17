@@ -81,7 +81,15 @@
     },
     "sensor": {
       "status": {
-        "name": "Estado del motor"
+        "name": "Estado del motor",
+        "state": {
+          "stopped": "Detenido",
+          "starting": "Preparando",
+          "running": "En funcionamiento",
+          "retrying": "Reconectando",
+          "preview_completed": "Vista previa terminada",
+          "error": "Error"
+        }
       }
     }
   }

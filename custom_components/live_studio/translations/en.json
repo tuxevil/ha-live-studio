@@ -81,7 +81,15 @@
     },
     "sensor": {
       "status": {
-        "name": "Engine status"
+        "name": "Engine status",
+        "state": {
+          "stopped": "Stopped",
+          "starting": "Starting",
+          "running": "Running",
+          "retrying": "Reconnecting",
+          "preview_completed": "Preview completed",
+          "error": "Error"
+        }
       }
     }
   }

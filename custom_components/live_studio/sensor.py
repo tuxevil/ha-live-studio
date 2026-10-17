@@ -1,4 +1,4 @@
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.helpers.entity import EntityCategory
 
 from .entity import StudioEntity
@@ -10,6 +10,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
 class StudioStatus(StudioEntity, SensorEntity):
     _attr_translation_key = "status"
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_options = ['stopped', 'starting', 'running', 'retrying', 'preview_completed', 'error']
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_icon = "mdi:video-outline"
 
