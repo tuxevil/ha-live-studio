@@ -132,7 +132,11 @@
           "height": "Alto",
           "fps": "Fotogramas por segundo",
           "threads": "Hilos de codificación",
-          "bitrate_kbps": "Tasa de vídeo (Kbps)"
+          "bitrate_kbps": "Tasa de vídeo (Kbps)",
+          "video_encoder": "Codificador de vídeo",
+          "video_decoder": "Decodificador de cámaras",
+          "vaapi_device": "Dispositivo VAAPI · vacío para detectar",
+          "source_buffer_ms": "Búfer de cámaras · milisegundos"
         }
       },
       "overlays": {

@@ -132,7 +132,11 @@
           "height": "Height",
           "fps": "Frames per second",
           "threads": "Encoder threads",
-          "bitrate_kbps": "Video bitrate (Kbps)"
+          "bitrate_kbps": "Video bitrate (Kbps)",
+          "video_encoder": "Video encoder",
+          "video_decoder": "Camera decoder",
+          "vaapi_device": "VAAPI device · empty to detect",
+          "source_buffer_ms": "Camera buffer · milliseconds"
         }
       },
       "overlays": {

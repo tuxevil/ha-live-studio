@@ -76,3 +76,9 @@ Las entidades y el sensor único de0.2 migran sin perder sus IDs: aquel sensor p
 una lista de un elemento. Un live puede tener una lista vacía. La opción nativa
 Reconfigurar permite reconectar un live migrado a otro motor solo si conserva su
 identidad; no permite sustituirlo accidentalmente por otro live.
+
+## Local or external engine
+
+The companion can run as an HAOS app or on an external Linux machine/container. The same integration controls either through its authenticated HTTP API. No Proxmox or GPU is required. Preserve engine/profile identities when relocating existing entries and use Reconfigure to change their endpoint. Never run two senders with the same ingest key.
+
+Video options select CPU, VAAPI or automatic encoder/decoder, an optional render device and a bounded camera buffer. CPU is the default; explicit VAAPI requires a working device. Automatic mode reports its selected backend/fallback. VAAPI support depends on the host driver and codecs; test actual inputs.

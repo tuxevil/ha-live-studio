@@ -508,12 +508,27 @@ class LiveStudioOptionsFlow(config_entries.OptionsFlow):
             ("width", 640, 3840),
             ("height", 360, 2160),
             ("fps", 5, 30),
+            ("source_buffer_ms", 0, 2000),
             ("threads", 1, 8),
             ("bitrate_kbps", 500, 15000),
         ]:
+            if name == "source_buffer_ms" and name not in current:
+                continue
             fields[vol.Required(name, default=current[name])] = vol.All(
                 vol.Coerce(int), vol.Range(min=low, max=high)
             )
+        for key in (
+            ["video_encoder", "video_decoder"] if "video_encoder" in current else []
+        ):
+            fields[vol.Required(key, default=current.get(key, "cpu"))] = (
+                selector.SelectSelector(
+                    selector.SelectSelectorConfig(options=["cpu", "vaapi", "auto"])
+                )
+            )
+        if "vaapi_device" in current:
+            fields[
+                vol.Optional("vaapi_device", default=current.get("vaapi_device", ""))
+            ] = str
         return self.async_show_form(
             step_id="video", data_schema=vol.Schema(fields), errors=errors
         )
