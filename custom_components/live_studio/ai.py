@@ -34,20 +34,27 @@ async def compare(coordinator):
                 raise CompareConfigurationError(
                     "The optional LLM Vision integration is not available"
                 )
-            data = coordinator.data
-            sources = data["config"]["sources"]
-            status = data["status"]
-            if len(sources) < 2:
+            config = await coordinator.client.request("config")
+            status = await coordinator.client.request("status")
+            configured = config["sources"]
+            if len(configured) < 2:
                 raise CompareConfigurationError("Configure at least two cameras")
+            active = status.get("state") in ("running", "starting", "retrying")
+            sources = [
+                source
+                for source in configured
+                if not active
+                or status.get("cameras", {}).get(source["id"], {}).get("healthy")
+                is True
+            ]
+            excluded = [source for source in configured if source not in sources]
+            if len(sources) < 2:
+                raise CompareConfigurationError(
+                    "At least two cameras need confirmed fresh video; offline cameras are skipped"
+                )
             images = [coordinator.camera_entity(s["id"]) for s in sources]
             if any(not x for x in images):
                 raise CompareConfigurationError("Camera entities are not ready")
-            active = status.get("state") in ("running", "starting", "retrying")
-            if active and not all(
-                status.get("cameras", {}).get(s["id"], {}).get("healthy")
-                for s in sources
-            ):
-                raise CompareConfigurationError("A camera has no confirmed fresh video")
             item = {
                 "type": "object",
                 "properties": {
@@ -65,7 +72,7 @@ async def compare(coordinator):
                 "additionalProperties": False,
             }
             descriptions = "\n".join(
-                f"Image {i+1}: {s['id']} — {s['name']}. {s.get('description','')}"
+                f"Image {i + 1}: {s['id']} — {s['name']}. {s.get('description', '')}"
                 for i, s in enumerate(sources)
             )
             focus = options.get("ai_focus", "").strip() or (
@@ -124,7 +131,21 @@ async def compare(coordinator):
                 raise CompareConfigurationError(
                     "The provider returned no structured camera scores"
                 )
-            body["scores"] = scores
+            if set(scores) != {source["id"] for source in sources}:
+                raise CompareConfigurationError(
+                    "The provider returned incomplete camera scores"
+                )
+            body["scores"] = {
+                **scores,
+                **{
+                    source["id"]: dict(
+                        score=0,
+                        usable=False,
+                        reason="Sin vídeo fresco confirmado; no evaluada por IA",
+                    )
+                    for source in excluded
+                },
+            }
             await coordinator.client.request("comparison", body)
             await coordinator.async_request_refresh()
         except asyncio.CancelledError:

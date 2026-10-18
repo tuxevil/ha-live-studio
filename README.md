@@ -150,3 +150,8 @@ opcionales e independientes para cada live.
 ### Camera sidebar
 
 Engine 0.6.0 adds an optional Camera sidebar switch and Thumbnail refresh interval per live. Controls apply while broadcasting, without restarting audio or the encoder. The sidebar reuses existing decoded camera frames at a default interval of three seconds. Supported output: 1920×1080. Turn the switch off to return to full screen.
+
+La comparación IA excluye las cámaras sin vídeo fresco confirmado y las marca
+como no evaluadas, sin retirarlas del live. Necesita al menos dos vistas sanas.
+Una cámara recuperada vuelve a participar automáticamente. Para seleccionar
+entre fuentes sanas aunque otra esté desconectada se requiere Engine0.7.1+.

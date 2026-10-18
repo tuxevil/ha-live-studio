@@ -20,6 +20,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: docker run --rm -v "$PWD:/workspace:ro" -w /workspace --entrypoint python3 ghcr.io/home-assistant/home-assistant:2026.10.1 tests/smoke_ha.py
+      - run: docker run --rm -v "$PWD:/workspace:ro" -w /workspace --entrypoint python3 ghcr.io/home-assistant/home-assistant:2026.10.1 tests/test_ai.py
 
   frontend:
     runs-on: ubuntu-latest
