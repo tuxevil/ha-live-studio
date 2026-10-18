@@ -47,6 +47,7 @@ async def catalog(current):
                         else ""
                     ),
                     "selected": source["rtsp_url"] in selected,
+                    "public_name": selected.get(source["rtsp_url"], source["name"]),
                 }
                 for source in sources
             ],
@@ -80,6 +81,7 @@ async def get_cameras(hass, connection, msg):
         vol.Required("entity_id"): str,
         vol.Required("revision"): str,
         vol.Required("camera_ids"): [str],
+        vol.Optional("camera_names"): {str: str},
         vol.Optional("new_camera"): {
             vol.Required("name"): str,
             vol.Required("rtsp_url"): str,
@@ -108,6 +110,17 @@ async def update_cameras(hass, connection, msg):
             choices = {source["catalog_id"]: source for source in sources}
             if len(ids) != len(set(ids)) or set(ids) - choices.keys():
                 raise ValueError()
+            public_names = msg.get("camera_names", {})
+            if public_names.keys() - set(ids):
+                raise ValueError()
+            for name in public_names.values():
+                if (
+                    not name.strip()
+                    or len(name) > 64
+                    or any(not c.isprintable() for c in name)
+                    or name.strip().casefold() in ("automatic", "automático", "manual")
+                ):
+                    raise ValueError()
             existing = {source["rtsp_url"]: source for source in config["sources"]}
             selected = []
             for identity in ids:
@@ -125,13 +138,17 @@ async def update_cameras(hass, connection, msg):
                         },
                     )
                 )
+                if identity in public_names:
+                    selected[-1] = dict(
+                        selected[-1], name=" ".join(public_names[identity].split())
+                    )
             names = {
                 source["name"].casefold()
                 for source in selected
                 if source["rtsp_url"] in existing
             }
             for index, source in enumerate(selected):
-                if source["rtsp_url"] in existing:
+                if source["rtsp_url"] in existing or ids[index] in public_names:
                     continue
                 if source["name"].casefold() in names:
                     source = dict(source)
@@ -154,6 +171,8 @@ async def update_cameras(hass, connection, msg):
                     )
                 )
             if not 1 <= len(selected) <= 8:
+                raise ValueError()
+            if len({source["name"].casefold() for source in selected}) != len(selected):
                 raise ValueError()
             # Reordering checkboxes does not reorder or replace retained cameras.
             keep = {source["id"]: source for source in selected}

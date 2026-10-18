@@ -118,7 +118,11 @@ entity: sensor.live_studio_engine_status
 La lista descubre automáticamente las entidades de cámara de la integración
 **Frigate** instalada en Home Assistant, con sus nombres y fuentes RTSP. Marca o
 desmarca las que quieras y pulsa **Guardar cámaras**. Cada directo mantiene su
-propia selección. Las cámaras retiradas permanecen en la biblioteca del motor.
+propia selección. Bajo cada cámara seleccionada puedes editar su **Nombre público**
+(máximo 64 caracteres, único dentro del live). Se utiliza en los rótulos y selectores
+de Live Studio; no cambia la entidad de Frigate ni su dirección RTSP. Los nombres
+son independientes para cada directo y se conservan al actualizar la lista.
+Las cámaras retiradas permanecen en la biblioteca del motor.
 **Otra fuente (avanzado)** permite registrar una fuente ajena a Frigate mediante nombre
 y dirección privada. Los nombres deben ser únicos dentro de un live; al importar
 nombres repetidos se añade un sufijo. Se admiten entre1 y8 fuentes.

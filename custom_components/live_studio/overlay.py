@@ -113,7 +113,7 @@ async def setup(hass):
         hass, "/live_studio_static/live-studio-overlay-card.js?v=0.5.0"
     )
     frontend.add_extra_js_url(
-        hass, "/live_studio_static/live-studio-cameras-card.js?v=0.5.2"
+        hass, "/live_studio_static/live-studio-cameras-card.js?v=0.6.1"
     )
     from .cameras import setup as setup_cameras
 

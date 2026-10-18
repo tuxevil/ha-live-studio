@@ -621,6 +621,44 @@ async def main():
         assert config["sources"] == original_sources
         assert len(profiles[child]["config"]["sources"]) == 1
         assert len(second.runtime_data.data["config"]["sources"]) == 1
+        renamed_connection = Connection()
+        await unwrap(get_cameras)(
+            hass, renamed_connection, {"id": 8, "entity_id": overlay_entity}
+        )
+        payload = renamed_connection.result
+        rename = dict(
+            edit,
+            revision=payload["revision"],
+            camera_names={edit["camera_ids"][0]: "Vista pública"},
+        )
+        await unwrap(update_cameras)(hass, renamed_connection, rename)
+        assert renamed_connection.error is None
+        await hass.async_block_till_done()
+        assert profiles[child]["config"]["sources"][0]["name"] == "Vista pública"
+        assert config["sources"] == original_sources
+        await unwrap(get_cameras)(
+            hass, renamed_connection, {"id": 9, "entity_id": overlay_entity}
+        )
+        assert (
+            next(c for c in renamed_connection.result["cameras"] if c["selected"])[
+                "public_name"
+            ]
+            == "Vista pública"
+        )
+        invalid = Connection()
+        await unwrap(update_cameras)(
+            hass,
+            invalid,
+            dict(
+                rename,
+                revision=renamed_connection.result["revision"],
+                camera_names={edit["camera_ids"][0]: " "},
+            ),
+        )
+        assert invalid.error == "cannot_apply"
+        print(
+            "PASS public camera names: persisted, isolated per live, returned after discovery, empty names rejected"
+        )
         discovered_source = dict(
             catalog_id="source_auto_sky",
             id="camera_auto_sky",
