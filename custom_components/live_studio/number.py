@@ -4,7 +4,8 @@ from .entity import StudioEntity
 
 SETTINGS = [
     ("minimum_margin", 1, 30, 1),
-    ("day_bonus", 0, 15, 1),
+    ("morning_bonus", 0, 15, 1),
+    ("evening_bonus", 0, 15, 1),
     ("minimum_dwell", 0, 120, 60),
     ("comparison_interval", 1, 60, 60),
     ("confirmations", 1, 5, 1),

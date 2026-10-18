@@ -106,6 +106,26 @@ class AIAvailabilityTests(unittest.IsolatedAsyncioTestCase):
             await ai.compare(c)
         self.assertFalse(any(path == "comparison" for path, body in calls))
 
+    async def test_complete_json_text_and_markdown_fence_are_accepted(self):
+        scores = {key: dict(score=80, usable=True, reason="Visible") for key in ("wide", "town")}
+        for text in (json.dumps(scores), "```json\n" + json.dumps(scores) + "\n```"):
+            c, status, calls = self.coordinator()
+            c.hass.services.async_call = AsyncMock(return_value={"response_text": text})
+            await ai.compare(c)
+            body = next(body for path, body in calls if path == "comparison")
+            self.assertEqual(body["scores"]["wide"], scores["wide"])
+
+    async def test_malformed_truncated_and_invalid_scores_preserve_view(self):
+        valid = {key: dict(score=80, usable=True, reason="Visible") for key in ("wide", "town")}
+        invalid = copy.deepcopy(valid)
+        invalid["town"]["score"] = True
+        for text in ('{"wide":', "No image available", json.dumps(invalid)):
+            c, status, calls = self.coordinator()
+            c.hass.services.async_call = AsyncMock(return_value={"response_text": text})
+            with self.assertRaises(ai.CompareConfigurationError):
+                await ai.compare(c)
+            self.assertFalse(any(path == "comparison" for path, body in calls))
+
 
 if __name__ == "__main__":
     unittest.main()

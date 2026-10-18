@@ -156,18 +156,24 @@
       },
       "automation": {
         "title": "Automatic selection",
-        "description": "AI is optional and uses an existing LLM Vision provider. Comparisons run only during output; the button can compare while idle without automatically changing the selected camera. Daylight preference is applied only with a fresh sun state.",
+        "description": "AI is optional and uses an existing LLM Vision provider. Comparisons run only during output; the button can compare while idle without automatically changing the selected camera. Morning and evening bonuses use this live’s configured timezone, apply only inside their time windows, and affect automatic selection only. Manual selection overrides them.",
         "data": {
           "ai_enabled": "Enable optional AI camera comparison",
           "ai_provider": "LLM Vision provider",
           "ai_model": "Vision model",
-          "preferred_camera": "Preferred daytime camera",
           "minimum_margin": "Minimum advantage (points)",
-          "day_bonus": "Daytime preference bonus (points)",
           "confirmations": "Consecutive confirmations",
           "minimum_dwell_minutes": "Minimum time between view changes (minutes)",
           "comparison_interval_minutes": "Comparison interval (minutes)",
-          "ai_focus": "Live subject and visual criteria"
+          "ai_focus": "Live subject and visual criteria",
+          "morning_camera": "Camera to favor in the morning",
+          "morning_start": "Morning bonus starts (local time)",
+          "morning_end": "Morning bonus ends (local time)",
+          "morning_bonus": "Morning camera bonus (points)",
+          "evening_camera": "Camera to favor in the evening",
+          "evening_start": "Evening bonus starts (local time)",
+          "evening_end": "Evening bonus ends (local time)",
+          "evening_bonus": "Evening camera bonus (points)"
         }
       },
       "camera_pick": {
@@ -285,9 +291,6 @@
       "minimum_margin": {
         "name": "Minimum advantage"
       },
-      "day_bonus": {
-        "name": "Daytime preference bonus"
-      },
       "minimum_dwell": {
         "name": "Minimum time between changes"
       },
@@ -299,6 +302,12 @@
       },
       "sidebar_refresh_seconds": {
         "name": "Thumbnail refresh interval"
+      },
+      "morning_bonus": {
+        "name": "Morning camera bonus"
+      },
+      "evening_bonus": {
+        "name": "Evening camera bonus"
       }
     },
     "camera": {

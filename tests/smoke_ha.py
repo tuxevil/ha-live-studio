@@ -45,9 +45,15 @@ async def main():
     config = dict(
         rtsp_url=sources[0]["rtsp_url"],
         sources=sources,
-        preferred_camera="wide",
         minimum_margin=10,
-        day_bonus=5,
+        morning_camera="",
+        morning_start="05:00",
+        morning_end="08:00",
+        morning_bonus=0,
+        evening_camera="",
+        evening_start="16:30",
+        evening_end="19:00",
+        evening_bonus=0,
         minimum_dwell=1200,
         confirmations=2,
         comparison_interval=600,
@@ -89,7 +95,6 @@ async def main():
             comparison={},
             compared_at=None,
             effective_scores={},
-            applied_day_bonus=0,
             decision="waiting",
         ),
         current_camera=dict(id="wide", name="Wide", camera_entity=""),
@@ -277,9 +282,16 @@ async def main():
         )
         assert result["type"] == "create_entry"
         entry = result["result"]
+        registry = entity_registry.async_get(hass)
+        registry.async_get_or_create(
+            "number",
+            "live_studio",
+            status["id"] + "_day_bonus",
+            config_entry=entry,
+        )
+        await hass.config_entries.async_reload(entry.entry_id)
         await hass.async_block_till_done()
         assert entry.state.value == "loaded", entry.state
-        registry = entity_registry.async_get(hass)
 
         def entity(domain, key):
             return registry.async_get_entity_id(
@@ -289,9 +301,14 @@ async def main():
         entities = [
             e for e in registry.entities.values() if e.config_entry_id == entry.entry_id
         ]
-        assert len(entities) == 23, [e.entity_id for e in entities]
+        assert len(entities) == 24, [e.entity_id for e in entities]
+        assert entity("number", "morning_bonus")
+        assert entity("number", "evening_bonus")
+        assert registry.async_get_entity_id(
+            "number", "live_studio", status["id"] + "_day_bonus"
+        ) is None
         print(
-            "PASS installation, authentication and 23 native entities including camera proxies"
+            "PASS installation, authentication and 24 native entities including timed bonuses and camera proxies"
         )
         options = await hass.config_entries.options.async_init(entry.entry_id)
         assert options["type"] == "menu"
@@ -342,12 +359,9 @@ async def main():
         )
         assert result["type"] == "create_entry", result
         await hass.async_block_till_done()
-        hass.states.async_set("sun.sun", "above_horizon")
         await entry.runtime_data.async_refresh()
-        assert (
-            received["sensor_text"] == "Temperature: 22.5 °C  ·  Humidity: 75 %"
-            and received["daylight"] is True
-        )
+        assert received["sensor_text"] == "Temperature: 22.5 °C  ·  Humidity: 75 %"
+        assert "daylight" not in received
         await hass.services.async_call(
             "text",
             "set_value",
@@ -380,7 +394,7 @@ async def main():
         )
         assert status["selection"]["mode"] == "automatic"
         print(
-            "PASS options menu, sensor/daylight, live text, numeric policy and manual/automatic camera controls"
+            "PASS options menu, sensor metadata, live text, numeric policy and manual/automatic camera controls"
         )
 
         async def model(call):
@@ -414,15 +428,26 @@ async def main():
                 ai_provider="fixture-provider",
                 ai_model="fixture-vision-model",
                 ai_focus="Test subject: chickens",
-                preferred_camera="wide",
                 minimum_margin=10,
-                day_bonus=5,
+                morning_camera="zoom",
+                morning_start="05:00:00",
+                morning_end="08:00:00",
+                morning_bonus=15,
+                evening_camera="wide",
+                evening_start="16:30:00",
+                evening_end="19:00:00",
+                evening_bonus=15,
                 confirmations=2,
                 minimum_dwell_minutes=20,
                 comparison_interval_minutes=10,
             ),
         )
         assert result["type"] == "create_entry", result
+        assert config["morning_camera"] == "zoom"
+        assert config["morning_start"] == "05:00:00"
+        assert config["morning_bonus"] == 15
+        assert config["evening_camera"] == "wide"
+        assert config["evening_bonus"] == 15
         await hass.async_block_till_done()
         await hass.services.async_call(
             "button", "press", {"entity_id": entity("button", "compare")}, blocking=True

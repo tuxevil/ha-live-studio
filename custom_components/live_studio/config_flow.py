@@ -397,14 +397,18 @@ class LiveStudioOptionsFlow(config_entries.OptionsFlow):
             items.append("camera_remove")
         return self.async_show_menu(step_id="cameras", menu_options=items)
 
-    def picker(self):
+    def picker(self, include_disabled=False):
+        options = (
+            [{"value": "", "label": "Disabled / Desactivado"}]
+            if include_disabled
+            else []
+        )
+        options.extend(
+            {"value": s["id"], "label": s["name"]}
+            for s in self.current()["sources"]
+        )
         return selector.SelectSelector(
-            selector.SelectSelectorConfig(
-                options=[
-                    {"value": s["id"], "label": s["name"]}
-                    for s in self.current()["sources"]
-                ]
-            )
+            selector.SelectSelectorConfig(options=options)
         )
 
     async def async_step_camera_add(self, user_input=None):
@@ -605,12 +609,21 @@ class LiveStudioOptionsFlow(config_entries.OptionsFlow):
             ),
         }
         if current["sources"]:
-            fields[
-                vol.Required("preferred_camera", default=current["preferred_camera"])
-            ] = self.picker()
+            for period in ("morning", "evening"):
+                fields[
+                    vol.Required(
+                        f"{period}_camera", default=current[f"{period}_camera"]
+                    )
+                ] = self.picker(include_disabled=True)
+                for edge in ("start", "end"):
+                    key = f"{period}_{edge}"
+                    fields[vol.Required(key, default=current[key])] = (
+                        selector.TimeSelector()
+                    )
         for key, low, high, value in [
             ("minimum_margin", 1, 30, current["minimum_margin"]),
-            ("day_bonus", 0, 15, current["day_bonus"]),
+            ("morning_bonus", 0, 15, current["morning_bonus"]),
+            ("evening_bonus", 0, 15, current["evening_bonus"]),
             ("confirmations", 1, 5, current["confirmations"]),
             ("minimum_dwell_minutes", 0, 120, current["minimum_dwell"] // 60),
             (

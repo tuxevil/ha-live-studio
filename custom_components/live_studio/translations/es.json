@@ -156,18 +156,24 @@
       },
       "automation": {
         "title": "Selección automática",
-        "description": "La IA es opcional y usa un proveedor existente de LLM Vision. Se compara durante la salida; el botón permite comparar en reposo sin cambiar automáticamente de cámara. La preferencia diurna solo se aplica con un estado solar reciente.",
+        "description": "La IA es opcional y usa un proveedor existente de LLM Vision. Compara durante la emisión; el botón puede comparar en reposo sin cambiar la cámara. Los bonus de mañana y tarde usan la zona horaria configurada para este live, solo se aplican dentro de sus horarios y afectan únicamente a la selección automática. La selección manual prevalece.",
         "data": {
           "ai_enabled": "Activar comparación de cámaras con IA",
           "ai_provider": "Proveedor de LLM Vision",
           "ai_model": "Modelo con visión",
-          "preferred_camera": "Cámara preferida de día",
           "minimum_margin": "Ventaja mínima (puntos)",
-          "day_bonus": "Preferencia diurna adicional (puntos)",
           "confirmations": "Confirmaciones consecutivas",
           "minimum_dwell_minutes": "Tiempo mínimo entre cambios (minutos)",
           "comparison_interval_minutes": "Intervalo de comparación (minutos)",
-          "ai_focus": "Tema y criterios visuales del live"
+          "ai_focus": "Tema y criterios visuales del live",
+          "morning_camera": "Cámara con preferencia al amanecer",
+          "morning_start": "Inicio del bonus matutino (hora local)",
+          "morning_end": "Fin del bonus matutino (hora local)",
+          "morning_bonus": "Bonus matutino (puntos)",
+          "evening_camera": "Cámara con preferencia al atardecer",
+          "evening_start": "Inicio del bonus vespertino (hora local)",
+          "evening_end": "Fin del bonus vespertino (hora local)",
+          "evening_bonus": "Bonus vespertino (puntos)"
         }
       },
       "camera_pick": {
@@ -285,9 +291,6 @@
       "minimum_margin": {
         "name": "Ventaja mínima"
       },
-      "day_bonus": {
-        "name": "Preferencia diurna adicional"
-      },
       "minimum_dwell": {
         "name": "Tiempo mínimo entre cambios"
       },
@@ -299,6 +302,12 @@
       },
       "sidebar_refresh_seconds": {
         "name": "Actualizar miniaturas cada"
+      },
+      "morning_bonus": {
+        "name": "Bonus de cámara al amanecer"
+      },
+      "evening_bonus": {
+        "name": "Bonus de cámara al atardecer"
       }
     },
     "camera": {

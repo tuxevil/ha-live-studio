@@ -12,6 +12,10 @@ from .api import StudioError
 from .const import DOMAIN
 
 PUBLIC_KEYS = {
+    "broadcast_layout",
+    "vertical_news",
+    "sidebar_width",
+    "weather_footer_enabled",
     "overlay_layout",
     "title",
     "ticker",
@@ -114,6 +118,9 @@ async def setup(hass):
     )
     frontend.add_extra_js_url(
         hass, "/live_studio_static/live-studio-cameras-card.js?v=0.6.1"
+    )
+    frontend.add_extra_js_url(
+        hass, "/live_studio_static/live-studio-news-card.js?v=0.7.0"
     )
     from .cameras import setup as setup_cameras
 

@@ -43,15 +43,7 @@ class StudioCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         try:
             text = sensor_text(self.hass, self.entry.options)
-            sun = self.hass.states.get("sun.sun")
-            daylight = (
-                (sun.state == "above_horizon")
-                if sun and sun.state in ("above_horizon", "below_horizon")
-                else None
-            )
-            await self.client.request(
-                "metadata", {"sensor_text": text, "daylight": daylight}
-            )
+            await self.client.request("metadata", {"sensor_text": text})
             result = {
                 "status": await self.client.request("status"),
                 "config": await self.client.request("config"),
@@ -127,6 +119,15 @@ async def async_setup_entry(hass, entry):
     coordinator = StudioCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
+    registry = entity_registry.async_get(hass)
+    for registered in list(registry.entities.values()):
+        if (
+            registered.config_entry_id == entry.entry_id
+            and registered.platform == DOMAIN
+            and registered.domain == "number"
+            and registered.unique_id.endswith("_day_bonus")
+        ):
+            registry.async_remove(registered.entity_id)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     coordinator.ready = True
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))

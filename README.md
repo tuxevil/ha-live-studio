@@ -1,7 +1,6 @@
 # Live Studio
 
-Integración de Home Assistant para un estudio local de streaming. **0.5.3 — versión
-de desarrollo**, licencia MIT. Requiere Live Studio Engine 0.5.1 o posterior para editar cámaras durante la emisión.
+Integración de Home Assistant para un estudio local de streaming. **0.7.0**, licencia MIT. Requiere Live Studio Engine 0.7.2 o posterior para selección por horarios.
 
 ## Qué incluye
 
@@ -10,10 +9,11 @@ de desarrollo**, licencia MIT. Requiere Live Studio Engine 0.5.1 o posterior par
 - Nombre propio,1–8 fuentes de cámara y0–8 sensores opcionales por live.
 - Menús de cámaras, vídeo/música, textos y selección automática.
 - Selector manual/automático con cambios de cámara sin reiniciar música ni salida.
+- Bonuses configurables de cámaras por franjas locales de mañana y tarde, independientes por live.
 - Sensores de cámara actual, vídeo reciente, estado y decisión de selección.
 - Cámaras de instantáneas por fuente y vista actual, sin imágenes antiguas tras fallos.
-- Cinco ajustes numéricos para margen, preferencia diurna, permanencia, intervalo
-  y confirmaciones; textos editables para título, marquesina y CTA.
+- Siete ajustes numéricos para margen, bonuses por horario, permanencia,
+  intervalo, confirmaciones y refresco de miniaturas; textos editables para título, marquesina y CTA.
 - Botones compactos de vista previa, detener y comparar vistas ahora.
 - IA opcional mediante un proveedor existente de LLM Vision, local o cloud.
 - Español e inglés; actualización local cada 15 segundos.
@@ -155,3 +155,13 @@ La comparación IA excluye las cámaras sin vídeo fresco confirmado y las marca
 como no evaluadas, sin retirarlas del live. Necesita al menos dos vistas sanas.
 Una cámara recuperada vuelve a participar automáticamente. Para seleccionar
 entre fuentes sanas aunque otra esté desconectada se requiere Engine0.7.1+.
+
+## Novedades verticales (motor0.8.0 / integración0.7.0)
+
+Añadir `custom:live-studio-news-card` con la entidad de estado del live. Permite
+activar el diseño de sidebar de altura completa, ajustar su ancho y footer, y
+agregar, editar, ordenar, desactivar o quitar anuncios. La velocidad y los mensajes
+se guardan en caliente, conservando el audio y la sesión RTMP. **Diseño anterior**
+permite revertir cada live por separado. El diseño completo conserva el OSD de
+las cámaras y omite nuestro reloj y fecha. Las lecturas ausentes se muestran como
+un guion. No se inventan valores ni tiempos de publicación.

@@ -12,6 +12,38 @@ class CompareConfigurationError(HomeAssistantError):
     pass
 
 
+def camera_scores(response, identities):
+    """Accept structured output or complete JSON text; never infer missing scores."""
+    scores = response.get("structured_response") if isinstance(response, dict) else None
+    if not isinstance(scores, dict) and isinstance(response, dict):
+        text = response.get("response_text")
+        if isinstance(text, str):
+            text = text.strip()
+            if text.startswith("```") and text.endswith("```"):
+                lines = text.splitlines()
+                if lines[0].lower() in ("```", "```json"):
+                    text = "\n".join(lines[1:-1]).strip()
+            try:
+                scores = json.loads(text)
+            except ValueError:
+                pass
+    if not isinstance(scores, dict):
+        raise CompareConfigurationError("The provider returned no structured camera scores")
+    if set(scores) != set(identities):
+        raise CompareConfigurationError("The provider returned incomplete camera scores")
+    for value in scores.values():
+        if (
+            not isinstance(value, dict)
+            or set(value) != {"score", "usable", "reason"}
+            or type(value["score"]) is not int
+            or not 0 <= value["score"] <= 100
+            or type(value["usable"]) is not bool
+            or not isinstance(value["reason"], str)
+        ):
+            raise CompareConfigurationError("The provider returned invalid camera scores")
+    return scores
+
+
 async def compare(coordinator):
     if coordinator.ai_lock.locked():
         raise CompareConfigurationError("A camera comparison is already running")
@@ -122,19 +154,7 @@ async def compare(coordinator):
                 blocking=True,
                 return_response=True,
             )
-            scores = (
-                response.get("structured_response")
-                if isinstance(response, dict)
-                else None
-            )
-            if not isinstance(scores, dict):
-                raise CompareConfigurationError(
-                    "The provider returned no structured camera scores"
-                )
-            if set(scores) != {source["id"] for source in sources}:
-                raise CompareConfigurationError(
-                    "The provider returned incomplete camera scores"
-                )
+            scores = camera_scores(response, [source["id"] for source in sources])
             body["scores"] = {
                 **scores,
                 **{
