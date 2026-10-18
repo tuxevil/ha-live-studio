@@ -215,6 +215,9 @@
     "switch": {
       "stream": {
         "name": "Live output"
+      },
+      "camera_sidebar": {
+        "name": "Camera sidebar"
       }
     },
     "button": {
@@ -293,6 +296,9 @@
       },
       "confirmations": {
         "name": "Consecutive confirmations"
+      },
+      "sidebar_refresh_seconds": {
+        "name": "Thumbnail refresh interval"
       }
     },
     "camera": {

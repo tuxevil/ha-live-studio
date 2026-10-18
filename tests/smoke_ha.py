@@ -62,6 +62,8 @@ async def main():
         title="Live Studio",
         timezone="UTC",
         show_clock=True,
+        camera_sidebar=False,
+        sidebar_refresh_seconds=3,
         ticker="",
         cta="Like and subscribe",
         cta_period=600,
@@ -287,9 +289,9 @@ async def main():
         entities = [
             e for e in registry.entities.values() if e.config_entry_id == entry.entry_id
         ]
-        assert len(entities) == 21, [e.entity_id for e in entities]
+        assert len(entities) == 23, [e.entity_id for e in entities]
         print(
-            "PASS installation, authentication and 21 native entities including camera proxies"
+            "PASS installation, authentication and 23 native entities including camera proxies"
         )
         options = await hass.config_entries.options.async_init(entry.entry_id)
         assert options["type"] == "menu"
@@ -665,6 +667,16 @@ async def main():
         print(
             "PASS camera checklist API: no RTSP disclosure, admin-only, stale-edit protection, independent live changes and entity reload"
         )
+        rail_switch = registry.async_get_entity_id("switch", "live_studio", child_id + "_camera_sidebar")
+        await hass.services.async_call("switch", "turn_on", {"entity_id": rail_switch}, blocking=True)
+        assert profiles[child]["config"]["camera_sidebar"] is True
+        assert config["camera_sidebar"] is False
+        refresh_number = registry.async_get_entity_id("number", "live_studio", child_id + "_sidebar_refresh_seconds")
+        await hass.services.async_call("number", "set_value", {"entity_id": refresh_number, "value": 5}, blocking=True)
+        assert profiles[child]["config"]["sidebar_refresh_seconds"] == 5
+        await hass.services.async_call("switch", "turn_off", {"entity_id": rail_switch}, blocking=True)
+        assert profiles[child]["config"]["camera_sidebar"] is False
+        print("PASS independent sidebar switch and thumbnail refresh number")
         child_switch = registry.async_get_entity_id(
             "switch", "live_studio", child_id + "_stream"
         )

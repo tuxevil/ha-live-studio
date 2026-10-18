@@ -142,3 +142,7 @@ Cada live puede definir su tema y criterios en Opciones → Selección automáti
 priorizar animales visibles y encuadre antes que un paisaje vacío. Si se deja
 vacío se conservan los criterios de paisaje. El proveedor y modelo siguen siendo
 opcionales e independientes para cada live.
+
+### Camera sidebar
+
+Engine 0.6.0 adds an optional Camera sidebar switch and Thumbnail refresh interval per live. Controls apply while broadcasting, without restarting audio or the encoder. The sidebar reuses existing decoded camera frames at a default interval of three seconds. Supported output: 1920×1080. Turn the switch off to return to full screen.

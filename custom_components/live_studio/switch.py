@@ -4,7 +4,7 @@ from .entity import StudioEntity
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    async_add_entities([StudioStream(entry.runtime_data)])
+    async_add_entities([StudioStream(entry.runtime_data), StudioSidebar(entry.runtime_data)])
 
 
 class StudioStream(StudioEntity, SwitchEntity):
@@ -24,3 +24,25 @@ class StudioStream(StudioEntity, SwitchEntity):
 
     async def async_turn_off(self, **kwargs):
         await self.coordinator.action("stop", {})
+
+
+class StudioSidebar(StudioEntity, SwitchEntity):
+    _attr_translation_key = "camera_sidebar"
+    _attr_icon = "mdi:view-dashboard-outline"
+
+    def __init__(self, coordinator):
+        super().__init__(coordinator, "camera_sidebar")
+
+    @property
+    def available(self):
+        return super().available and "camera_sidebar" in self.coordinator.data["config"]
+
+    @property
+    def is_on(self):
+        return self.coordinator.data["config"].get("camera_sidebar", False)
+
+    async def async_turn_on(self, **kwargs):
+        await self.coordinator.action("config", {"camera_sidebar": True})
+
+    async def async_turn_off(self, **kwargs):
+        await self.coordinator.action("config", {"camera_sidebar": False})
