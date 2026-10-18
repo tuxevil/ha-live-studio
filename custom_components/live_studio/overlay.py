@@ -120,7 +120,7 @@ async def setup(hass):
         hass, "/live_studio_static/live-studio-cameras-card.js?v=0.6.1"
     )
     frontend.add_extra_js_url(
-        hass, "/live_studio_static/live-studio-news-card.js?v=0.7.0"
+        hass, "/live_studio_static/live-studio-news-card.js?v=0.7.1"
     )
     from .cameras import setup as setup_cameras
 

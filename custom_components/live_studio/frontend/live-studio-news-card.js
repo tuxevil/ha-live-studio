@@ -53,7 +53,17 @@ class LiveStudioNewsCard extends HTMLElement {
       button(article,'↓',()=>{if(i+1<this.news.messages.length){[this.news.messages[i+1],this.news.messages[i]]=[m,this.news.messages[i+1]];this.draw();}});
       button(article,'Quitar',()=>{this.news.messages.splice(i,1);this.draw();});
     });
-    button(card,'Añadir anuncio',()=>{if(this.news.messages.length>=32)return;this.news.messages.push({id:crypto.randomUUID(),title:'Nuevo anuncio',subtitle:'',icon:'radio',enabled:true,priority:0});this.draw();});
+    const add=button(card,'Añadir anuncio',()=>{
+      if(this.news.messages.length>=32)return;
+      // IDs identify announcements; they do not require a secure-context API.
+      const prefix='news_'+Date.now().toString(36)+'_';
+      let suffix=0;
+      while(this.news.messages.some(m=>m.id===prefix+suffix))suffix++;
+      this.news.messages.push({id:prefix+suffix,title:'Nuevo anuncio',subtitle:'',icon:'radio',enabled:true,priority:0});
+      this.error='';this.draw();
+    });
+    add.disabled=this.news.messages.length>=32;
+    if(add.disabled)add.title='Máximo de 32 anuncios por directo';
     button(card,'Guardar',async()=>{
       this.news.messages.forEach((m,i)=>m.priority=i*10);
       try{

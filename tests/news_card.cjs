@@ -22,5 +22,24 @@ function nodes(el){return [el,...(el.children||[]).flatMap(nodes)];}
  assert.equal(requests[1].changes.broadcast_layout,'full_height');
  const remove=nodes(card.shadowRoot).find(n=>n.tag==='button'&&n.textContent==='Quitar');remove.onclick();
  assert.equal(card.news.messages.length,0);
- console.log('PASS news editor: literal text, per-live writes, live speed/layout, removal');
+ // An HTTP Home Assistant origin may have no crypto.randomUUID (or crypto).
+ const previousCrypto=Object.getOwnPropertyDescriptor(global,'crypto');
+ Object.defineProperty(global,'crypto',{value:undefined,configurable:true});
+ const originalNow=Date.now;Date.now=()=>123456789;
+ try{
+   for(let i=0;i<32;i++)nodes(card.shadowRoot).find(n=>n.tag==='button'&&n.textContent==='Añadir anuncio').onclick();
+   assert.equal(card.news.messages.length,32);
+   assert.equal(new Set(card.news.messages.map(m=>m.id)).size,32);
+   assert(card.news.messages.every(m=>/^[a-zA-Z0-9_-]{1,64}$/.test(m.id)));
+   const add=nodes(card.shadowRoot).find(n=>n.tag==='button'&&n.textContent==='Añadir anuncio');
+   assert.equal(add.disabled,true);add.onclick();assert.equal(card.news.messages.length,32);
+   card.news.messages[0].title='Otro anuncio';
+   await nodes(card.shadowRoot).find(n=>n.tag==='button'&&n.textContent==='Guardar').onclick();
+   assert.equal(requests.at(-1).entity_id,'sensor.landscape');
+   assert.equal(requests.at(-1).changes.vertical_news.messages[0].title,'Otro anuncio');
+ }finally{
+   Date.now=originalNow;
+   if(previousCrypto)Object.defineProperty(global,'crypto',previousCrypto);else delete global.crypto;
+ }
+ console.log('PASS news editor: HTTP add, unique IDs, limit, save, literal text, per-live writes, removal');
 })().catch(e=>{console.error(e);process.exitCode=1;});

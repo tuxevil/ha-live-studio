@@ -1,3 +1,9 @@
+# 0.7.1
+
+- Fix adding announcements when Home Assistant is accessed over HTTP.
+- Generate collision-safe announcement IDs without secure-context browser APIs.
+- Disable the add button with an explanation at the 32-announcement limit.
+
 # 0.7.0
 
 - Bundled per-live vertical announcement editor with live speed and content updates.
