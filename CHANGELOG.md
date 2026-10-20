@@ -1,3 +1,8 @@
+# 0.7.2
+
+- Add a per-live H.264/HEVC output codec option when the connected engine supports it.
+- HEVC is available with a working VAAPI encoder.
+
 # 0.7.1
 
 - Fix adding announcements when Home Assistant is accessed over HTTP.

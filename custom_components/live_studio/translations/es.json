@@ -133,6 +133,7 @@
           "fps": "Fotogramas por segundo",
           "threads": "Hilos de codificación",
           "bitrate_kbps": "Tasa de vídeo (Kbps)",
+          "video_codec": "Códec de salida",
           "video_encoder": "Codificador de vídeo",
           "video_decoder": "Decodificador de cámaras",
           "vaapi_device": "Dispositivo VAAPI · vacío para detectar",

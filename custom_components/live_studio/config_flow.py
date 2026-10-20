@@ -523,6 +523,12 @@ class LiveStudioOptionsFlow(config_entries.OptionsFlow):
             fields[vol.Required(name, default=current[name])] = vol.All(
                 vol.Coerce(int), vol.Range(min=low, max=high)
             )
+        if "video_codec" in current:
+            fields[vol.Required("video_codec", default=current["video_codec"])] = (
+                selector.SelectSelector(
+                    selector.SelectSelectorConfig(options=["h264", "hevc"])
+                )
+            )
         for key in (
             ["video_encoder", "video_decoder"] if "video_encoder" in current else []
         ):

@@ -1,6 +1,6 @@
 # Live Studio
 
-Integración de Home Assistant para un estudio local de streaming. **0.7.0**, licencia MIT. Requiere Live Studio Engine 0.7.2 o posterior para selección por horarios.
+Integración de Home Assistant para un estudio local de streaming. **0.7.2**, licencia MIT. Requiere Live Studio Engine 0.7.2 o posterior para selección por horarios.
 
 ## Qué incluye
 
@@ -81,7 +81,7 @@ identidad; no permite sustituirlo accidentalmente por otro live.
 
 The companion can run as an HAOS app or on an external Linux machine/container. The same integration controls either through its authenticated HTTP API. No Proxmox or GPU is required. Preserve engine/profile identities when relocating existing entries and use Reconfigure to change their endpoint. Never run two senders with the same ingest key.
 
-Video options select CPU, VAAPI or automatic encoder/decoder, an optional render device and a bounded camera buffer. CPU is the default; explicit VAAPI requires a working device. Automatic mode reports its selected backend/fallback. VAAPI support depends on the host driver and codecs; test actual inputs.
+With Live Studio Engine 0.8.4 or later, Video options include H.264 or HEVC output selection. H.264 is the default; HEVC requires a working VAAPI encoder. The same form selects a CPU/VAAPI/automatic encoder and decoder, an optional render device and a bounded camera buffer. Automatic mode reports its selected backend/fallback. VAAPI support depends on the host driver and codecs; test actual inputs.
 
 ### Overlay editor (engine0.5.0+)
 
